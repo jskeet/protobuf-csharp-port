@@ -20,7 +20,7 @@
 #include <google/protobuf/compiler/cpp/cpp_generator.h>
 #include <google/protobuf/compiler/python/python_generator.h>
 #include <google/protobuf/compiler/java/java_generator.h>
-
+#include <google/protobuf/compiler/csharp/csharp_generator.h>
 
 int main(int argc, char* argv[]) {
 
@@ -41,6 +41,11 @@ int main(int argc, char* argv[]) {
   google::protobuf::compiler::python::Generator py_generator;
   cli.RegisterGenerator("--python_out", &py_generator,
                         "Generate Python source file.");
+
+  // Proto2 C#
+  google::protobuf::compiler::csharp::CSharpGenerator csharp_generator;
+  cli.RegisterGenerator("--csharp_out", &csharp_generator,
+                        "Generate C# source file.");
 
   return cli.Run(argc, argv);
 }

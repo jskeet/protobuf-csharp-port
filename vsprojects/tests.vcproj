@@ -6,7 +6,7 @@
 	ProjectGUID="{4DF72760-C055-40A5-A77E-30A17E2AC2DB}"
 	RootNamespace="tests"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="0"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -69,6 +69,8 @@
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -145,6 +147,8 @@
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -247,6 +251,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\google\protobuf\unittest_embed_optimize_for.pb.h"
+				>
+			</File>
+			<File
 				RelativePath=".\google\protobuf\unittest_import.pb.h"
 				>
 			</File>
@@ -256,10 +264,6 @@
 			</File>
 			<File
 				RelativePath=".\google\protobuf\unittest_optimize_for.pb.h"
-				>
-			</File>
-			<File
-				RelativePath=".\google\protobuf\unittest_embed_optimize_for.pb.h"
 				>
 			</File>
 		</Filter>
@@ -275,19 +279,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\google\protobuf\stubs\common_unittest.cc"
-				>
-			</File>
-			<File
-				RelativePath="..\src\google\protobuf\stubs\strutil_unittest.cc"
-				>
-			</File>
-			<File
 				RelativePath="..\src\google\protobuf\io\coded_stream_unittest.cc"
 				>
 			</File>
 			<File
 				RelativePath="..\src\google\protobuf\compiler\command_line_interface_unittest.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\src\google\protobuf\stubs\common_unittest.cc"
 				>
 			</File>
 			<File
@@ -375,6 +375,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\google\protobuf\stubs\strutil_unittest.cc"
+				>
+			</File>
+			<File
 				RelativePath="..\src\google\protobuf\test_util.cc"
 				>
 			</File>
@@ -391,6 +395,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\google\protobuf\unittest_embed_optimize_for.pb.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\google\protobuf\unittest_import.pb.cc"
 				>
 			</File>
@@ -400,10 +408,6 @@
 			</File>
 			<File
 				RelativePath=".\google\protobuf\unittest_optimize_for.pb.cc"
-				>
-			</File>
-			<File
-				RelativePath=".\google\protobuf\unittest_embed_optimize_for.pb.cc"
 				>
 			</File>
 			<File
@@ -464,6 +468,30 @@
 					Description="Generating unittest.pb.{h,cc}..."
 					CommandLine="Release\protoc -I../src --cpp_out=. ../src/google/protobuf/unittest.proto&#x0D;&#x0A;"
 					Outputs="google\protobuf\unittest.pb.h;google\protobuf\unittest.pb.cc"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\src\google\protobuf\unittest_embed_optimize_for.proto"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Generating unittest_embed_optimize_for.pb.{h,cc}..."
+					CommandLine="Debug\protoc -I../src --cpp_out=. ../src/google/protobuf/unittest_embed_optimize_for.proto&#x0D;&#x0A;"
+					Outputs="google\protobuf\unittest_embed_optimize_for.pb.h;google\protobuf\unittest_embed_optimize_for.pb.cc"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Generating unittest_embed_optimize_for.pb.{h,cc}..."
+					CommandLine="Release\protoc -I../src --cpp_out=. ../src/google/protobuf/unittest_embed_optimize_for.proto&#x0D;&#x0A;"
+					Outputs="google\protobuf\unittest_embed_optimize_for.pb.h;google\protobuf\unittest_embed_optimize_for.pb.cc"
 				/>
 			</FileConfiguration>
 		</File>
@@ -536,30 +564,6 @@
 					Description="Generating unittest_optimize_for.pb.{h,cc}..."
 					CommandLine="Release\protoc -I../src --cpp_out=. ../src/google/protobuf/unittest_optimize_for.proto&#x0D;&#x0A;"
 					Outputs="google\protobuf\unittest_optimize_for.pb.h;google\protobuf\unittest_optimize_for.pb.cc"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath="..\src\google\protobuf\unittest_embed_optimize_for.proto"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Generating unittest_embed_optimize_for.pb.{h,cc}..."
-					CommandLine="Debug\protoc -I../src --cpp_out=. ../src/google/protobuf/unittest_embed_optimize_for.proto&#x0D;&#x0A;"
-					Outputs="google\protobuf\unittest_embed_optimize_for.pb.h;google\protobuf\unittest_embed_optimize_for.pb.cc"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Generating unittest_embed_optimize_for.pb.{h,cc}..."
-					CommandLine="Release\protoc -I../src --cpp_out=. ../src/google/protobuf/unittest_embed_optimize_for.proto&#x0D;&#x0A;"
-					Outputs="google\protobuf\unittest_embed_optimize_for.pb.h;google\protobuf\unittest_embed_optimize_for.pb.cc"
 				/>
 			</FileConfiguration>
 		</File>
