@@ -172,7 +172,9 @@ namespace Google.ProtocolBuffers {
         output.WriteBytes(fieldNumber, value);
       }
       foreach (UnknownFieldSet value in groupList) {
+#pragma warning disable 0612
         output.WriteUnknownGroup(fieldNumber, value);
+#pragma warning restore 0612
       }
     }
 
@@ -195,7 +197,9 @@ namespace Google.ProtocolBuffers {
         result += CodedOutputStream.ComputeBytesSize(fieldNumber, value);
       }
       foreach (UnknownFieldSet value in groupList) {
+#pragma warning disable 0612
         result += CodedOutputStream.ComputeUnknownGroupSize(fieldNumber, value);
+#pragma warning restore 0612
       }
       return result;
     }
@@ -273,7 +277,7 @@ namespace Google.ProtocolBuffers {
         if (extras.Count == 0) {
           return current;
         }
- 	      if (current == null) {
+           if (current == null) {
           current = new List<T>(extras);
         } else {
           current.AddRange(extras);
@@ -359,7 +363,7 @@ namespace Google.ProtocolBuffers {
       /// <returns></returns>
       private static ReadOnlyCollection<T> MakeReadOnly<T>(ref List<T> list) {
         ReadOnlyCollection<T> ret = list == null ? Lists<T>.Empty : new ReadOnlyCollection<T>(list);
- 	      list = null;
+           list = null;
         return ret;
       }
     }

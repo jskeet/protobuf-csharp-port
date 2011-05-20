@@ -46,7 +46,7 @@ namespace Google.ProtocolBuffers {
 
     private static readonly ByteString empty = new ByteString(new byte[0]);
 
-    internal readonly byte[] bytes;
+    private readonly byte[] bytes;
 
     /// <summary>
     /// Constructs a new ByteString from the given byte array. The array is
@@ -76,6 +76,13 @@ namespace Google.ProtocolBuffers {
 
     public byte[] ToByteArray() {
       return (byte[])bytes.Clone();
+    }
+
+    /// <summary>
+    /// Constructs a ByteString from the Base64 Encoded String.
+    /// </summary>
+    public static ByteString FromBase64(string bytes) {
+      return new ByteString(System.Convert.FromBase64String(bytes));
     }
 
     /// <summary>
@@ -155,10 +162,9 @@ namespace Google.ProtocolBuffers {
 
     public override int GetHashCode() {
       int ret = 23;
-	  for (int i = 0; i < bytes.Length; i++)
-	  {
-		  ret = (ret * 23) ^ bytes[i];
-	  }
+      foreach (byte b in bytes) {
+        ret = (ret << 8) | b;
+      }
       return ret;
     }
 
