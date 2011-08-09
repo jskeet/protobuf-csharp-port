@@ -283,16 +283,16 @@ namespace Google.ProtocolBuffers
             CodedInputStream input2 = CodedInputStream.CreateInstance(rawBytes);
             UnknownFieldSet.Builder unknownFields = UnknownFieldSet.CreateBuilder();
 
-            while (true)
+            uint tag;
+            string name;
+            while (input1.ReadTag(out tag, out name))
             {
-                uint tag = input1.ReadTag();
-                Assert.AreEqual(tag, input2.ReadTag());
-                if (tag == 0)
-                {
-                    break;
-                }
+                uint tag2;
+                Assert.IsTrue(input2.ReadTag(out tag2, out name));
+                Assert.AreEqual(tag, tag2);
+
                 unknownFields.MergeFieldFrom(tag, input1);
-                input2.SkipField(tag);
+                input2.SkipField();
             }
         }
 
@@ -355,11 +355,15 @@ namespace Google.ProtocolBuffers
             ms.Position = 0;
 
             CodedInputStream input = CodedInputStream.CreateInstance(ms);
-            Assert.AreEqual(tag, input.ReadTag());
+            uint testtag;
+            string ignore;
+            Assert.IsTrue(input.ReadTag(out testtag, out ignore));
+            Assert.AreEqual(tag, testtag);
 
             try
             {
-                input.ReadBytes();
+                ByteString bytes = null;
+                input.ReadBytes(ref bytes);
                 Assert.Fail("Should have thrown an exception!");
             }
             catch (InvalidProtocolBufferException)
@@ -497,8 +501,14 @@ namespace Google.ProtocolBuffers
             ms.Position = 0;
 
             CodedInputStream input = CodedInputStream.CreateInstance(ms);
-            Assert.AreEqual(tag, input.ReadTag());
-            string text = input.ReadString();
+
+            uint testtag;
+            string ignored;
+
+            Assert.IsTrue(input.ReadTag(out testtag, out ignored));
+            Assert.AreEqual(tag, testtag);
+            string text = null;
+            input.ReadString(ref text);
             Assert.AreEqual('\ufffd', text[0]);
         }
 

@@ -77,7 +77,7 @@ namespace Google.ProtocolBuffers
         /// <summary>
         /// Parses a message of the given type from the given stream.
         /// </summary>
-        public static DynamicMessage ParseFrom(MessageDescriptor type, CodedInputStream input)
+        public static DynamicMessage ParseFrom(MessageDescriptor type, ICodedInputStream input)
         {
             Builder builder = CreateBuilder(type);
             Builder dynamicBuilder = builder.MergeFrom(input);
@@ -91,7 +91,7 @@ namespace Google.ProtocolBuffers
         /// <param name="input"></param>
         /// <param name="extensionRegistry"></param>
         /// <returns></returns>
-        public static DynamicMessage ParseFrom(MessageDescriptor type, CodedInputStream input,
+        public static DynamicMessage ParseFrom(MessageDescriptor type, ICodedInputStream input,
                                                ExtensionRegistry extensionRegistry)
         {
             Builder builder = CreateBuilder(type);
@@ -246,7 +246,7 @@ namespace Google.ProtocolBuffers
             get { return fields.IsInitializedWithRespectTo(type.Fields); }
         }
 
-        public override void WriteTo(CodedOutputStream output)
+        public override void WriteTo(ICodedOutputStream output)
         {
             fields.WriteTo(output);
             if (type.Options.MessageSetWireFormat)
@@ -264,7 +264,10 @@ namespace Google.ProtocolBuffers
             get
             {
                 int size = memoizedSize;
-                if (size != -1) return size;
+                if (size != -1)
+                {
+                    return size;
+                }
 
                 size = fields.SerializedSize;
                 if (type.Options.MessageSetWireFormat)
@@ -395,7 +398,7 @@ namespace Google.ProtocolBuffers
                 get { return fields.IsInitializedWithRespectTo(type.Fields); }
             }
 
-            public override Builder MergeFrom(CodedInputStream input, ExtensionRegistry extensionRegistry)
+            public override Builder MergeFrom(ICodedInputStream input, ExtensionRegistry extensionRegistry)
             {
                 UnknownFieldSet.Builder unknownFieldsBuilder = UnknownFieldSet.CreateBuilder(unknownFields);
                 unknownFieldsBuilder.MergeFrom(input, extensionRegistry, this);

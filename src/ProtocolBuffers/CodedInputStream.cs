@@ -58,7 +58,7 @@ namespace Google.ProtocolBuffers
     /// TODO(jonskeet): Consider whether recursion and size limits shouldn't be readonly,
     /// set at construction time.
     /// </remarks>
-    public sealed partial class CodedInputStream
+    public sealed class CodedInputStream : ICodedInputStream
     {
         private readonly byte[] buffer;
         private int bufferSize;
@@ -66,6 +66,9 @@ namespace Google.ProtocolBuffers
         private int bufferPos = 0;
         private readonly Stream input;
         private uint lastTag = 0;
+
+        private uint nextTag = 0;
+        private bool hasNextTag = false;
 
         internal const int DefaultRecursionLimit = 64;
         internal const int DefaultSizeLimit = 64 << 20; // 64MB
@@ -164,114 +167,176 @@ namespace Google.ProtocolBuffers
         #region Reading of tags etc
 
         /// <summary>
-        /// Attempt to read a field tag, returning 0 if we have reached the end
-        /// of the input data. Protocol message parsers use this to read tags,
-        /// since a protocol message may legally end wherever a tag occurs, and
-        /// zero is not a valid tag number.
+        /// Attempt to peek at the next field tag.
         /// </summary>
         [CLSCompliant(false)]
-        public uint ReadTag()
+        public bool PeekNextTag(out uint fieldTag, out string fieldName)
         {
-            if (IsAtEnd)
+            if (hasNextTag)
             {
-                lastTag = 0;
-                return 0;
+                fieldName = null;
+                fieldTag = nextTag;
+                return true;
             }
 
-            lastTag = ReadRawVarint32();
+            uint savedLast = lastTag;
+            hasNextTag = ReadTag(out nextTag, out fieldName);
+            lastTag = savedLast;
+            fieldTag = nextTag;
+            return hasNextTag;
+        }
+
+        /// <summary>
+        /// Attempt to read a field tag, returning false if we have reached the end
+        /// of the input data.
+        /// </summary>
+        /// <param name="fieldTag">The 'tag' of the field (id * 8 + wire-format)</param>
+        /// <param name="fieldName">Not Supported - For protobuffer streams, this parameter is always null</param>
+        /// <returns>true if the next fieldTag was read</returns>
+        [CLSCompliant(false)]
+        public bool ReadTag(out uint fieldTag, out string fieldName)
+        {
+            fieldName = null;
+
+            if (hasNextTag)
+            {
+                fieldTag = nextTag;
+                lastTag = fieldTag;
+                hasNextTag = false;
+                return true;
+            }
+
+            if (IsAtEnd)
+            {
+                fieldTag = 0;
+                lastTag = fieldTag;
+                return false;
+            }
+
+            fieldTag = ReadRawVarint32();
+            lastTag = fieldTag;
             if (lastTag == 0)
             {
                 // If we actually read zero, that's not a valid tag.
                 throw InvalidProtocolBufferException.InvalidTag();
             }
-            return lastTag;
+            return true;
         }
 
         /// <summary>
         /// Read a double field from the stream.
         /// </summary>
-        public double ReadDouble()
+        public bool ReadDouble(ref double value)
         {
 #if SILVERLIGHT2 || COMPACT_FRAMEWORK_35
-            byte[] bytes = ReadRawBytes(8);
-            return BitConverter.ToDouble(bytes, 0);
+            if (BitConverter.IsLittleEndian && 8 <= bufferSize - bufferPos)
+            {
+                value = BitConverter.ToDouble(buffer, bufferPos);
+                bufferPos += 8;
+            }
+            else
+            {
+                byte[] rawBytes = ReadRawBytes(8);
+                if (!BitConverter.IsLittleEndian) 
+                    ByteArray.Reverse(rawBytes);
+                value = BitConverter.ToDouble(rawBytes, 0);
+            }
 #else
-      return BitConverter.Int64BitsToDouble((long) ReadRawLittleEndian64());
+            value = BitConverter.Int64BitsToDouble((long) ReadRawLittleEndian64());
 #endif
+            return true;
         }
 
         /// <summary>
         /// Read a float field from the stream.
         /// </summary>
-        public float ReadFloat()
+        public bool ReadFloat(ref float value)
         {
-            // TODO(jonskeet): Test this on different endiannesses
-            uint raw = ReadRawLittleEndian32();
-            byte[] rawBytes = BitConverter.GetBytes(raw);
-            return BitConverter.ToSingle(rawBytes, 0);
+            if (BitConverter.IsLittleEndian && 4 <= bufferSize - bufferPos)
+            {
+                value = BitConverter.ToSingle(buffer, bufferPos);
+                bufferPos += 4;
+            }
+            else
+            {
+                byte[] rawBytes = ReadRawBytes(4);
+                if (!BitConverter.IsLittleEndian)
+                {
+                    ByteArray.Reverse(rawBytes);
+                }
+                value = BitConverter.ToSingle(rawBytes, 0);
+            }
+            return true;
         }
 
         /// <summary>
         /// Read a uint64 field from the stream.
         /// </summary>
         [CLSCompliant(false)]
-        public ulong ReadUInt64()
+        public bool ReadUInt64(ref ulong value)
         {
-            return ReadRawVarint64();
+            value = ReadRawVarint64();
+            return true;
         }
 
         /// <summary>
         /// Read an int64 field from the stream.
         /// </summary>
-        public long ReadInt64()
+        public bool ReadInt64(ref long value)
         {
-            return (long) ReadRawVarint64();
+            value = (long) ReadRawVarint64();
+            return true;
         }
 
         /// <summary>
         /// Read an int32 field from the stream.
         /// </summary>
-        public int ReadInt32()
+        public bool ReadInt32(ref int value)
         {
-            return (int) ReadRawVarint32();
+            value = (int) ReadRawVarint32();
+            return true;
         }
 
         /// <summary>
         /// Read a fixed64 field from the stream.
         /// </summary>
         [CLSCompliant(false)]
-        public ulong ReadFixed64()
+        public bool ReadFixed64(ref ulong value)
         {
-            return ReadRawLittleEndian64();
+            value = ReadRawLittleEndian64();
+            return true;
         }
 
         /// <summary>
         /// Read a fixed32 field from the stream.
         /// </summary>
         [CLSCompliant(false)]
-        public uint ReadFixed32()
+        public bool ReadFixed32(ref uint value)
         {
-            return ReadRawLittleEndian32();
+            value = ReadRawLittleEndian32();
+            return true;
         }
 
         /// <summary>
         /// Read a bool field from the stream.
         /// </summary>
-        public bool ReadBool()
+        public bool ReadBool(ref bool value)
         {
-            return ReadRawVarint32() != 0;
+            value = ReadRawVarint32() != 0;
+            return true;
         }
 
         /// <summary>
         /// Reads a string field from the stream.
         /// </summary>
-        public String ReadString()
+        public bool ReadString(ref string value)
         {
             int size = (int) ReadRawVarint32();
             // No need to read any data for an empty string.
             if (size == 0)
             {
-                return "";
+                value = "";
+                return true;
             }
             if (size <= bufferSize - bufferPos)
             {
@@ -279,10 +344,12 @@ namespace Google.ProtocolBuffers
                 //   just copy directly from it.
                 String result = Encoding.UTF8.GetString(buffer, bufferPos, size);
                 bufferPos += size;
-                return result;
+                value = result;
+                return true;
             }
             // Slow path: Build a byte array first then copy it.
-            return Encoding.UTF8.GetString(ReadRawBytes(size), 0, size);
+            value = Encoding.UTF8.GetString(ReadRawBytes(size), 0, size);
+            return true;
         }
 
         /// <summary>
@@ -339,7 +406,7 @@ namespace Google.ProtocolBuffers
         /// <summary>
         /// Reads a bytes field value from the stream.
         /// </summary>   
-        public ByteString ReadBytes()
+        public bool ReadBytes(ref ByteString value)
         {
             int size = (int) ReadRawVarint32();
             if (size < bufferSize - bufferPos && size > 0)
@@ -348,12 +415,14 @@ namespace Google.ProtocolBuffers
                 //   just copy directly from it.
                 ByteString result = ByteString.CopyFrom(buffer, bufferPos, size);
                 bufferPos += size;
-                return result;
+                value = result;
+                return true;
             }
             else
             {
-                // Slow path:  Build a byte array first then copy it.
-                return ByteString.AttachBytes(ReadRawBytes(size));
+                // Slow path:  Build a byte array and attach it to a new ByteString.
+                value = ByteString.AttachBytes(ReadRawBytes(size));
+                return true;
             }
         }
 
@@ -361,90 +430,701 @@ namespace Google.ProtocolBuffers
         /// Reads a uint32 field value from the stream.
         /// </summary>   
         [CLSCompliant(false)]
-        public uint ReadUInt32()
+        public bool ReadUInt32(ref uint value)
         {
-            return ReadRawVarint32();
+            value = ReadRawVarint32();
+            return true;
         }
 
         /// <summary>
         /// Reads an enum field value from the stream. The caller is responsible
         /// for converting the numeric value to an actual enum.
         /// </summary>   
-        public int ReadEnum()
+        public bool ReadEnum(ref IEnumLite value, out object unknown, IEnumLiteMap mapping)
         {
-            return (int) ReadRawVarint32();
+            int rawValue = (int) ReadRawVarint32();
+
+            value = mapping.FindValueByNumber(rawValue);
+            if (value != null)
+            {
+                unknown = null;
+                return true;
+            }
+            unknown = rawValue;
+            return false;
+        }
+
+        /// <summary>
+        /// Reads an enum field value from the stream. If the enum is valid for type T,
+        /// then the ref value is set and it returns true.  Otherwise the unkown output
+        /// value is set and this method returns false.
+        /// </summary>   
+        [CLSCompliant(false)]
+        public bool ReadEnum<T>(ref T value, out object unknown)
+            where T : struct, IComparable, IFormattable, IConvertible
+        {
+            int number = (int) ReadRawVarint32();
+            if (Enum.IsDefined(typeof (T), number))
+            {
+                unknown = null;
+                value = (T) (object) number;
+                return true;
+            }
+            unknown = number;
+            return false;
         }
 
         /// <summary>
         /// Reads an sfixed32 field value from the stream.
         /// </summary>   
-        public int ReadSFixed32()
+        public bool ReadSFixed32(ref int value)
         {
-            return (int) ReadRawLittleEndian32();
+            value = (int) ReadRawLittleEndian32();
+            return true;
         }
 
         /// <summary>
         /// Reads an sfixed64 field value from the stream.
         /// </summary>   
-        public long ReadSFixed64()
+        public bool ReadSFixed64(ref long value)
         {
-            return (long) ReadRawLittleEndian64();
+            value = (long) ReadRawLittleEndian64();
+            return true;
         }
 
         /// <summary>
         /// Reads an sint32 field value from the stream.
         /// </summary>   
-        public int ReadSInt32()
+        public bool ReadSInt32(ref int value)
         {
-            return DecodeZigZag32(ReadRawVarint32());
+            value = DecodeZigZag32(ReadRawVarint32());
+            return true;
         }
 
         /// <summary>
         /// Reads an sint64 field value from the stream.
         /// </summary>   
-        public long ReadSInt64()
+        public bool ReadSInt64(ref long value)
         {
-            return DecodeZigZag64(ReadRawVarint64());
+            value = DecodeZigZag64(ReadRawVarint64());
+            return true;
+        }
+
+        private bool BeginArray(uint fieldTag, out bool isPacked, out int oldLimit)
+        {
+            isPacked = WireFormat.GetTagWireType(fieldTag) == WireFormat.WireType.LengthDelimited;
+
+            if (isPacked)
+            {
+                int length = (int) (ReadRawVarint32() & int.MaxValue);
+                if (length > 0)
+                {
+                    oldLimit = PushLimit(length);
+                    return true;
+                }
+                oldLimit = -1;
+                return false; //packed but empty
+            }
+
+            oldLimit = -1;
+            return true;
+        }
+
+        /// <summary>
+        /// Returns true if the next tag is also part of the same unpacked array.
+        /// </summary>
+        private bool ContinueArray(uint currentTag)
+        {
+            string ignore;
+            uint next;
+            if (PeekNextTag(out next, out ignore))
+            {
+                if (next == currentTag)
+                {
+                    hasNextTag = false;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the next tag is also part of the same array, which may or may not be packed.
+        /// </summary>
+        private bool ContinueArray(uint currentTag, bool packed, int oldLimit)
+        {
+            if (packed)
+            {
+                if (ReachedLimit)
+                {
+                    PopLimit(oldLimit);
+                    return false;
+                }
+                return true;
+            }
+
+            string ignore;
+            uint next;
+            if (PeekNextTag(out next, out ignore))
+            {
+                if (next == currentTag)
+                {
+                    hasNextTag = false;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        [CLSCompliant(false)]
+        public void ReadPrimitiveArray(FieldType fieldType, uint fieldTag, string fieldName, ICollection<object> list)
+        {
+            WireFormat.WireType normal = WireFormat.GetWireType(fieldType);
+            WireFormat.WireType wformat = WireFormat.GetTagWireType(fieldTag);
+
+            // 2.3 allows packed form even if the field is not declared packed.
+            if (normal != wformat && wformat == WireFormat.WireType.LengthDelimited)
+            {
+                int length = (int) (ReadRawVarint32() & int.MaxValue);
+                int limit = PushLimit(length);
+                while (!ReachedLimit)
+                {
+                    Object value = null;
+                    if (ReadPrimitiveField(fieldType, ref value))
+                    {
+                        list.Add(value);
+                    }
+                }
+                PopLimit(limit);
+            }
+            else
+            {
+                Object value = null;
+                do
+                {
+                    if (ReadPrimitiveField(fieldType, ref value))
+                    {
+                        list.Add(value);
+                    }
+                } while (ContinueArray(fieldTag));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadStringArray(uint fieldTag, string fieldName, ICollection<string> list)
+        {
+            string tmp = null;
+            do
+            {
+                ReadString(ref tmp);
+                list.Add(tmp);
+            } while (ContinueArray(fieldTag));
+        }
+
+        [CLSCompliant(false)]
+        public void ReadBytesArray(uint fieldTag, string fieldName, ICollection<ByteString> list)
+        {
+            ByteString tmp = null;
+            do
+            {
+                ReadBytes(ref tmp);
+                list.Add(tmp);
+            } while (ContinueArray(fieldTag));
+        }
+
+        [CLSCompliant(false)]
+        public void ReadBoolArray(uint fieldTag, string fieldName, ICollection<bool> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                bool tmp = false;
+                do
+                {
+                    ReadBool(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadInt32Array(uint fieldTag, string fieldName, ICollection<int> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                int tmp = 0;
+                do
+                {
+                    ReadInt32(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadSInt32Array(uint fieldTag, string fieldName, ICollection<int> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                int tmp = 0;
+                do
+                {
+                    ReadSInt32(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadUInt32Array(uint fieldTag, string fieldName, ICollection<uint> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                uint tmp = 0;
+                do
+                {
+                    ReadUInt32(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadFixed32Array(uint fieldTag, string fieldName, ICollection<uint> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                uint tmp = 0;
+                do
+                {
+                    ReadFixed32(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadSFixed32Array(uint fieldTag, string fieldName, ICollection<int> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                int tmp = 0;
+                do
+                {
+                    ReadSFixed32(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadInt64Array(uint fieldTag, string fieldName, ICollection<long> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                long tmp = 0;
+                do
+                {
+                    ReadInt64(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadSInt64Array(uint fieldTag, string fieldName, ICollection<long> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                long tmp = 0;
+                do
+                {
+                    ReadSInt64(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadUInt64Array(uint fieldTag, string fieldName, ICollection<ulong> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                ulong tmp = 0;
+                do
+                {
+                    ReadUInt64(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadFixed64Array(uint fieldTag, string fieldName, ICollection<ulong> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                ulong tmp = 0;
+                do
+                {
+                    ReadFixed64(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadSFixed64Array(uint fieldTag, string fieldName, ICollection<long> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                long tmp = 0;
+                do
+                {
+                    ReadSFixed64(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadDoubleArray(uint fieldTag, string fieldName, ICollection<double> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                double tmp = 0;
+                do
+                {
+                    ReadDouble(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadFloatArray(uint fieldTag, string fieldName, ICollection<float> list)
+        {
+            bool isPacked;
+            int holdLimit;
+            if (BeginArray(fieldTag, out isPacked, out holdLimit))
+            {
+                float tmp = 0;
+                do
+                {
+                    ReadFloat(ref tmp);
+                    list.Add(tmp);
+                } while (ContinueArray(fieldTag, isPacked, holdLimit));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadEnumArray(uint fieldTag, string fieldName, ICollection<IEnumLite> list,
+                                  out ICollection<object> unknown, IEnumLiteMap mapping)
+        {
+            unknown = null;
+            object unkval;
+            IEnumLite value = null;
+            WireFormat.WireType wformat = WireFormat.GetTagWireType(fieldTag);
+
+            // 2.3 allows packed form even if the field is not declared packed.
+            if (wformat == WireFormat.WireType.LengthDelimited)
+            {
+                int length = (int) (ReadRawVarint32() & int.MaxValue);
+                int limit = PushLimit(length);
+                while (!ReachedLimit)
+                {
+                    if (ReadEnum(ref value, out unkval, mapping))
+                    {
+                        list.Add(value);
+                    }
+                    else
+                    {
+                        if (unknown == null)
+                        {
+                            unknown = new List<object>();
+                        }
+                        unknown.Add(unkval);
+                    }
+                }
+                PopLimit(limit);
+            }
+            else
+            {
+                do
+                {
+                    if (ReadEnum(ref value, out unkval, mapping))
+                    {
+                        list.Add(value);
+                    }
+                    else
+                    {
+                        if (unknown == null)
+                        {
+                            unknown = new List<object>();
+                        }
+                        unknown.Add(unkval);
+                    }
+                } while (ContinueArray(fieldTag));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadEnumArray<T>(uint fieldTag, string fieldName, ICollection<T> list,
+                                     out ICollection<object> unknown)
+            where T : struct, IComparable, IFormattable, IConvertible
+        {
+            unknown = null;
+            object unkval;
+            T value = default(T);
+            WireFormat.WireType wformat = WireFormat.GetTagWireType(fieldTag);
+
+            // 2.3 allows packed form even if the field is not declared packed.
+            if (wformat == WireFormat.WireType.LengthDelimited)
+            {
+                int length = (int) (ReadRawVarint32() & int.MaxValue);
+                int limit = PushLimit(length);
+                while (!ReachedLimit)
+                {
+                    if (ReadEnum<T>(ref value, out unkval))
+                    {
+                        list.Add(value);
+                    }
+                    else
+                    {
+                        if (unknown == null)
+                        {
+                            unknown = new List<object>();
+                        }
+                        unknown.Add(unkval);
+                    }
+                }
+                PopLimit(limit);
+            }
+            else
+            {
+                do
+                {
+                    if (ReadEnum(ref value, out unkval))
+                    {
+                        list.Add(value);
+                    }
+                    else
+                    {
+                        if (unknown == null)
+                        {
+                            unknown = new List<object>();
+                        }
+                        unknown.Add(unkval);
+                    }
+                } while (ContinueArray(fieldTag));
+            }
+        }
+
+        [CLSCompliant(false)]
+        public void ReadMessageArray<T>(uint fieldTag, string fieldName, ICollection<T> list, T messageType,
+                                        ExtensionRegistry registry) where T : IMessageLite
+        {
+            do
+            {
+                IBuilderLite builder = messageType.WeakCreateBuilderForType();
+                ReadMessage(builder, registry);
+                list.Add((T) builder.WeakBuildPartial());
+            } while (ContinueArray(fieldTag));
+        }
+
+        [CLSCompliant(false)]
+        public void ReadGroupArray<T>(uint fieldTag, string fieldName, ICollection<T> list, T messageType,
+                                      ExtensionRegistry registry) where T : IMessageLite
+        {
+            do
+            {
+                IBuilderLite builder = messageType.WeakCreateBuilderForType();
+                ReadGroup(WireFormat.GetTagFieldNumber(fieldTag), builder, registry);
+                list.Add((T) builder.WeakBuildPartial());
+            } while (ContinueArray(fieldTag));
         }
 
         /// <summary>
         /// Reads a field of any primitive type. Enums, groups and embedded
         /// messages are not handled by this method.
         /// </summary>
-        public object ReadPrimitiveField(FieldType fieldType)
+        public bool ReadPrimitiveField(FieldType fieldType, ref object value)
         {
             switch (fieldType)
             {
                 case FieldType.Double:
-                    return ReadDouble();
+                    {
+                        double tmp = 0;
+                        if (ReadDouble(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.Float:
-                    return ReadFloat();
+                    {
+                        float tmp = 0;
+                        if (ReadFloat(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.Int64:
-                    return ReadInt64();
+                    {
+                        long tmp = 0;
+                        if (ReadInt64(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.UInt64:
-                    return ReadUInt64();
+                    {
+                        ulong tmp = 0;
+                        if (ReadUInt64(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.Int32:
-                    return ReadInt32();
+                    {
+                        int tmp = 0;
+                        if (ReadInt32(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.Fixed64:
-                    return ReadFixed64();
+                    {
+                        ulong tmp = 0;
+                        if (ReadFixed64(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.Fixed32:
-                    return ReadFixed32();
+                    {
+                        uint tmp = 0;
+                        if (ReadFixed32(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.Bool:
-                    return ReadBool();
+                    {
+                        bool tmp = false;
+                        if (ReadBool(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.String:
-                    return ReadString();
+                    {
+                        string tmp = null;
+                        if (ReadString(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.Bytes:
-                    return ReadBytes();
+                    {
+                        ByteString tmp = null;
+                        if (ReadBytes(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.UInt32:
-                    return ReadUInt32();
+                    {
+                        uint tmp = 0;
+                        if (ReadUInt32(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.SFixed32:
-                    return ReadSFixed32();
+                    {
+                        int tmp = 0;
+                        if (ReadSFixed32(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.SFixed64:
-                    return ReadSFixed64();
+                    {
+                        long tmp = 0;
+                        if (ReadSFixed64(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.SInt32:
-                    return ReadSInt32();
+                    {
+                        int tmp = 0;
+                        if (ReadSInt32(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.SInt64:
-                    return ReadSInt64();
+                    {
+                        long tmp = 0;
+                        if (ReadSInt64(ref tmp))
+                        {
+                            value = tmp;
+                            return true;
+                        }
+                        return false;
+                    }
                 case FieldType.Group:
                     throw new ArgumentException("ReadPrimitiveField() cannot handle nested groups.");
                 case FieldType.Message:
@@ -501,7 +1181,10 @@ namespace Google.ProtocolBuffers
                             // Discard upper 32 bits.
                             for (int i = 0; i < 5; i++)
                             {
-                                if (ReadRawByte() < 128) return (uint) result;
+                                if (ReadRawByte() < 128)
+                                {
+                                    return (uint) result;
+                                }
                             }
                             throw InvalidProtocolBufferException.MalformedVarint();
                         }
@@ -561,7 +1244,10 @@ namespace Google.ProtocolBuffers
                             // use the fast path in more cases, and we rarely hit this section of code.
                             for (int i = 0; i < 5; i++)
                             {
-                                if (ReadRawByte() < 128) return (uint) result;
+                                if (ReadRawByte() < 128)
+                                {
+                                    return (uint) result;
+                                }
                             }
                             throw InvalidProtocolBufferException.MalformedVarint();
                         }
@@ -930,7 +1616,7 @@ namespace Google.ProtocolBuffers
             {
                 // We have all the bytes we need already.
                 byte[] bytes = new byte[size];
-                Array.Copy(buffer, bufferPos, bytes, 0, size);
+                ByteArray.Copy(buffer, bufferPos, bytes, 0, size);
                 bufferPos += size;
                 return bytes;
             }
@@ -942,7 +1628,7 @@ namespace Google.ProtocolBuffers
                 // First copy what we have.
                 byte[] bytes = new byte[size];
                 int pos = bufferSize - bufferPos;
-                Array.Copy(buffer, bufferPos, bytes, 0, pos);
+                ByteArray.Copy(buffer, bufferPos, bytes, 0, pos);
                 bufferPos = bufferSize;
 
                 // We want to use RefillBuffer() and then copy from the buffer into our
@@ -952,13 +1638,13 @@ namespace Google.ProtocolBuffers
 
                 while (size - pos > bufferSize)
                 {
-                    Array.Copy(buffer, 0, bytes, pos, bufferSize);
+                    Buffer.BlockCopy(buffer, 0, bytes, pos, bufferSize);
                     pos += bufferSize;
                     bufferPos = bufferSize;
                     RefillBuffer(true);
                 }
 
-                Array.Copy(buffer, 0, bytes, pos, size - pos);
+                ByteArray.Copy(buffer, 0, bytes, pos, size - pos);
                 bufferPos = size - pos;
 
                 return bytes;
@@ -1010,12 +1696,12 @@ namespace Google.ProtocolBuffers
 
                 // Start by copying the leftover bytes from this.buffer.
                 int newPos = originalBufferSize - originalBufferPos;
-                Array.Copy(buffer, originalBufferPos, bytes, 0, newPos);
+                ByteArray.Copy(buffer, originalBufferPos, bytes, 0, newPos);
 
                 // And now all the chunks.
                 foreach (byte[] chunk in chunks)
                 {
-                    Array.Copy(chunk, 0, bytes, newPos, chunk.Length);
+                    Buffer.BlockCopy(chunk, 0, bytes, newPos, chunk.Length);
                     newPos += chunk.Length;
                 }
 
@@ -1030,12 +1716,13 @@ namespace Google.ProtocolBuffers
         /// <returns>false if the tag is an end-group tag, in which case
         /// nothing is skipped. Otherwise, returns true.</returns>
         [CLSCompliant(false)]
-        public bool SkipField(uint tag)
+        public bool SkipField()
         {
+            uint tag = lastTag;
             switch (WireFormat.GetTagWireType(tag))
             {
                 case WireFormat.WireType.Varint:
-                    ReadInt32();
+                    ReadRawVarint64();
                     return true;
                 case WireFormat.WireType.Fixed64:
                     ReadRawLittleEndian64();
@@ -1065,10 +1752,11 @@ namespace Google.ProtocolBuffers
         /// </summary>
         public void SkipMessage()
         {
-            while (true)
+            uint tag;
+            string name;
+            while (ReadTag(out tag, out name))
             {
-                uint tag = ReadTag();
-                if (tag == 0 || !SkipField(tag))
+                if (!SkipField())
                 {
                     return;
                 }

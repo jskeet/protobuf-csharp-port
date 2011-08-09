@@ -31,6 +31,8 @@ namespace Google.ProtocolBuffers.TestProtos {
   [global::System.CodeDom.Compiler.GeneratedCodeAttribute("ProtoGen", "2.3.0.277")]
   public sealed partial class TestLiteImportsNonlite : pb::GeneratedMessageLite<TestLiteImportsNonlite, TestLiteImportsNonlite.Builder> {
     private static readonly TestLiteImportsNonlite defaultInstance = new Builder().BuildPartial();
+    private static readonly string[] _testLiteImportsNonliteFieldNames = new string[] { "message" };
+    private static readonly uint[] _testLiteImportsNonliteFieldTags = new uint[] { 10 };
     public static TestLiteImportsNonlite DefaultInstance {
       get { return defaultInstance; }
     }
@@ -59,10 +61,11 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
     }
     
-    public override void WriteTo(pb::CodedOutputStream output) {
+    public override void WriteTo(pb::ICodedOutputStream output) {
       int size = SerializedSize;
-      if (HasMessage) {
-        output.WriteMessage(1, Message);
+      string[] field_names = _testLiteImportsNonliteFieldNames;
+      if (hasMessage) {
+        output.WriteMessage(1, field_names[0], Message);
       }
     }
     
@@ -73,7 +76,7 @@ namespace Google.ProtocolBuffers.TestProtos {
         if (size != -1) return size;
         
         size = 0;
-        if (HasMessage) {
+        if (hasMessage) {
           size += pb::CodedOutputStream.ComputeMessageSize(1, Message);
         }
         memoizedSerializedSize = size;
@@ -124,10 +127,10 @@ namespace Google.ProtocolBuffers.TestProtos {
     public static TestLiteImportsNonlite ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static TestLiteImportsNonlite ParseFrom(pb::CodedInputStream input) {
+    public static TestLiteImportsNonlite ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static TestLiteImportsNonlite ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static TestLiteImportsNonlite ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     public static Builder CreateBuilder() { return new Builder(); }
@@ -191,27 +194,37 @@ namespace Google.ProtocolBuffers.TestProtos {
         return this;
       }
       
-      public override Builder MergeFrom(pb::CodedInputStream input) {
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
         return MergeFrom(input, pb::ExtensionRegistry.Empty);
       }
       
-      public override Builder MergeFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        while (true) {
-          uint tag = input.ReadTag();
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_testLiteImportsNonliteFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _testLiteImportsNonliteFieldTags[field_ordinal];
+            else {
+              ParseUnknownField(input, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
           switch (tag) {
             case 0: {
-              return this;
+              throw pb::InvalidProtocolBufferException.InvalidTag();
             }
             default: {
               if (pb::WireFormat.IsEndGroupTag(tag)) {
                 return this;
               }
-              ParseUnknownField(input, extensionRegistry, tag);
+              ParseUnknownField(input, extensionRegistry, tag, field_name);
               break;
             }
             case 10: {
               global::Google.ProtocolBuffers.TestProtos.TestAllTypes.Builder subBuilder = global::Google.ProtocolBuffers.TestProtos.TestAllTypes.CreateBuilder();
-              if (HasMessage) {
+              if (result.hasMessage) {
                 subBuilder.MergeFrom(Message);
               }
               input.ReadMessage(subBuilder, extensionRegistry);
@@ -220,11 +233,13 @@ namespace Google.ProtocolBuffers.TestProtos {
             }
           }
         }
+        
+        return this;
       }
       
       
       public bool HasMessage {
-       get { return result.HasMessage; }
+       get { return result.hasMessage; }
       }
       public global::Google.ProtocolBuffers.TestProtos.TestAllTypes Message {
         get { return result.Message; }
@@ -244,7 +259,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       public Builder MergeMessage(global::Google.ProtocolBuffers.TestProtos.TestAllTypes value) {
         pb::ThrowHelper.ThrowIfNull(value, "value");
-        if (result.HasMessage &&
+        if (result.hasMessage &&
             result.message_ != global::Google.ProtocolBuffers.TestProtos.TestAllTypes.DefaultInstance) {
             result.message_ = global::Google.ProtocolBuffers.TestProtos.TestAllTypes.CreateBuilder(result.message_).MergeFrom(value).BuildPartial();
         } else {

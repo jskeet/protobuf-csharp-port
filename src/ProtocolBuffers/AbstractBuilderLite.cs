@@ -35,8 +35,6 @@
 #endregion
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 
 namespace Google.ProtocolBuffers
@@ -62,13 +60,13 @@ namespace Google.ProtocolBuffers
 
         public abstract TBuilder MergeFrom(IMessageLite other);
 
-        public abstract TBuilder MergeFrom(CodedInputStream input, ExtensionRegistry extensionRegistry);
+        public abstract TBuilder MergeFrom(ICodedInputStream input, ExtensionRegistry extensionRegistry);
 
         public abstract TMessage DefaultInstanceForType { get; }
 
         #region IBuilderLite<TMessage,TBuilder> Members
 
-        public virtual TBuilder MergeFrom(CodedInputStream input)
+        public virtual TBuilder MergeFrom(ICodedInputStream input)
         {
             return MergeFrom(input, ExtensionRegistry.CreateInstance());
         }
@@ -154,12 +152,12 @@ namespace Google.ProtocolBuffers
             return MergeFrom(data, registry);
         }
 
-        IBuilderLite IBuilderLite.WeakMergeFrom(CodedInputStream input)
+        IBuilderLite IBuilderLite.WeakMergeFrom(ICodedInputStream input)
         {
             return MergeFrom(input);
         }
 
-        IBuilderLite IBuilderLite.WeakMergeFrom(CodedInputStream input, ExtensionRegistry registry)
+        IBuilderLite IBuilderLite.WeakMergeFrom(ICodedInputStream input, ExtensionRegistry registry)
         {
             return MergeFrom(input, registry);
         }

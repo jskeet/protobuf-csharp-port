@@ -42,6 +42,8 @@ namespace Google.ProtocolBuffers.TestProtos {
   [global::System.CodeDom.Compiler.GeneratedCodeAttribute("ProtoGen", "2.3.0.277")]
   public sealed partial class ImportMessageLite : pb::GeneratedMessageLite<ImportMessageLite, ImportMessageLite.Builder> {
     private static readonly ImportMessageLite defaultInstance = new Builder().BuildPartial();
+    private static readonly string[] _importMessageLiteFieldNames = new string[] { "d" };
+    private static readonly uint[] _importMessageLiteFieldTags = new uint[] { 8 };
     public static ImportMessageLite DefaultInstance {
       get { return defaultInstance; }
     }
@@ -56,7 +58,7 @@ namespace Google.ProtocolBuffers.TestProtos {
     
     public const int DFieldNumber = 1;
     private bool hasD;
-    private int d_ = 0;
+    private int d_;
     public bool HasD {
       get { return hasD; }
     }
@@ -70,10 +72,11 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
     }
     
-    public override void WriteTo(pb::CodedOutputStream output) {
+    public override void WriteTo(pb::ICodedOutputStream output) {
       int size = SerializedSize;
-      if (HasD) {
-        output.WriteInt32(1, D);
+      string[] field_names = _importMessageLiteFieldNames;
+      if (hasD) {
+        output.WriteInt32(1, field_names[0], D);
       }
     }
     
@@ -84,7 +87,7 @@ namespace Google.ProtocolBuffers.TestProtos {
         if (size != -1) return size;
         
         size = 0;
-        if (HasD) {
+        if (hasD) {
           size += pb::CodedOutputStream.ComputeInt32Size(1, D);
         }
         memoizedSerializedSize = size;
@@ -135,10 +138,10 @@ namespace Google.ProtocolBuffers.TestProtos {
     public static ImportMessageLite ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static ImportMessageLite ParseFrom(pb::CodedInputStream input) {
+    public static ImportMessageLite ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static ImportMessageLite ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static ImportMessageLite ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     public static Builder CreateBuilder() { return new Builder(); }
@@ -202,35 +205,47 @@ namespace Google.ProtocolBuffers.TestProtos {
         return this;
       }
       
-      public override Builder MergeFrom(pb::CodedInputStream input) {
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
         return MergeFrom(input, pb::ExtensionRegistry.Empty);
       }
       
-      public override Builder MergeFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
-        while (true) {
-          uint tag = input.ReadTag();
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_importMessageLiteFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _importMessageLiteFieldTags[field_ordinal];
+            else {
+              ParseUnknownField(input, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
           switch (tag) {
             case 0: {
-              return this;
+              throw pb::InvalidProtocolBufferException.InvalidTag();
             }
             default: {
               if (pb::WireFormat.IsEndGroupTag(tag)) {
                 return this;
               }
-              ParseUnknownField(input, extensionRegistry, tag);
+              ParseUnknownField(input, extensionRegistry, tag, field_name);
               break;
             }
             case 8: {
-              D = input.ReadInt32();
+              result.hasD = input.ReadInt32(ref result.d_);
               break;
             }
           }
         }
+        
+        return this;
       }
       
       
       public bool HasD {
-        get { return result.HasD; }
+        get { return result.hasD; }
       }
       public int D {
         get { return result.D; }

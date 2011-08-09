@@ -43,7 +43,7 @@ namespace Google.ProtocolBuffers
 {
     public abstract class ExtendableMessage<TMessage, TBuilder> : GeneratedMessage<TMessage, TBuilder>
         where TMessage : GeneratedMessage<TMessage, TBuilder>
-        where TBuilder : GeneratedBuilder<TMessage, TBuilder>
+        where TBuilder : GeneratedBuilder<TMessage, TBuilder>, new()
     {
         protected ExtendableMessage()
         {
@@ -230,7 +230,7 @@ namespace Google.ProtocolBuffers
                 }
             }
 
-            public void WriteUntil(int end, CodedOutputStream output)
+            public void WriteUntil(int end, ICodedOutputStream output)
             {
                 while (next != null && next.Value.Key.FieldNumber < end)
                 {

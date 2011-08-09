@@ -84,6 +84,7 @@
       <BenchmarkResources Include="$(BenchmarkProtosDirectory)\google_message1.dat" />
       <BenchmarkResources Include="$(BenchmarkProtosDirectory)\google_message2.dat" />
       <BenchmarkResources Include="$(SourceDirectory)\ProtocolBuffers\bin\$(BuildConfiguration)\Google.ProtocolBuffers.dll" />
+      <BenchmarkResources Include="$(SourceDirectory)\ProtocolBuffers.Serialization\bin\$(BuildConfiguration)\Google.ProtocolBuffers.Serialization.dll" />
       <BenchmarkResources Include="$(SourceDirectory)\ProtoBench\bin\$(BuildConfiguration)\ProtoBench.exe" />
     </ItemGroup>
 
@@ -92,6 +93,7 @@
 
   <Target Name="_RunBenchmarks" DependsOnTargets="_PrepareBenchmarkEnvironment">
     <ItemGroup>
+      <BenchmarkParameter Include="/v2" />
       <BenchmarkParameter Include="Google.ProtocolBuffers.ProtoBench.SizeMessage1,BenchmarkTypes" />
       <BenchmarkParameter Include="google_message1.dat" />
       <BenchmarkParameter Include="Google.ProtocolBuffers.ProtoBench.SpeedMessage1,BenchmarkTypes" />

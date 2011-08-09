@@ -35,11 +35,13 @@
 #endregion
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
 using Google.ProtocolBuffers.Collections;
 using Google.ProtocolBuffers.Descriptors;
 using Google.ProtocolBuffers.FieldAccess;
-using System.Collections;
 
 namespace Google.ProtocolBuffers
 {
@@ -50,7 +52,7 @@ namespace Google.ProtocolBuffers
     /// </summary>
     public abstract class GeneratedMessage<TMessage, TBuilder> : AbstractMessage<TMessage, TBuilder>
         where TMessage : GeneratedMessage<TMessage, TBuilder>
-        where TBuilder : GeneratedBuilder<TMessage, TBuilder>
+        where TBuilder : GeneratedBuilder<TMessage, TBuilder>, new()
     {
         private UnknownFieldSet unknownFields = UnknownFieldSet.DefaultInstance;
 

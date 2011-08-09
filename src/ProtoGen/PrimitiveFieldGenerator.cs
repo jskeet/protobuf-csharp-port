@@ -41,15 +41,15 @@ namespace Google.ProtocolBuffers.ProtoGen
     // TODO(jonskeet): Refactor this. There's loads of common code here.
     internal class PrimitiveFieldGenerator : FieldGeneratorBase, IFieldSourceGenerator
     {
-        internal PrimitiveFieldGenerator(FieldDescriptor descriptor)
-            : base(descriptor)
+        internal PrimitiveFieldGenerator(FieldDescriptor descriptor, int fieldOrdinal)
+            : base(descriptor, fieldOrdinal)
         {
         }
 
         public void GenerateMembers(TextGenerator writer)
         {
             writer.WriteLine("private bool has{0};", PropertyName);
-            writer.WriteLine("private {0} {1}_ = {2};", TypeName, Name, DefaultValue);
+            writer.WriteLine("private {0} {1}_{2};", TypeName, Name, HasDefaultValue ? " = " + DefaultValue : "");
             writer.WriteLine("public bool Has{0} {{", PropertyName);
             writer.WriteLine("  get {{ return has{0}; }}", PropertyName);
             writer.WriteLine("}");
@@ -62,7 +62,7 @@ namespace Google.ProtocolBuffers.ProtoGen
         public void GenerateBuilderMembers(TextGenerator writer)
         {
             writer.WriteLine("public bool Has{0} {{", PropertyName);
-            writer.WriteLine("  get {{ return result.Has{0}; }}", PropertyName);
+            writer.WriteLine("  get {{ return result.has{0}; }}", PropertyName);
             writer.WriteLine("}");
             AddClsComplianceCheck(writer);
             writer.WriteLine("public {0} {1} {{", TypeName, PropertyName);
@@ -97,19 +97,20 @@ namespace Google.ProtocolBuffers.ProtoGen
 
         public void GenerateParsingCode(TextGenerator writer)
         {
-            writer.WriteLine("{0} = input.Read{1}();", PropertyName, CapitalizedTypeName);
+            writer.WriteLine("result.has{0} = input.Read{1}(ref result.{2}_);", PropertyName, CapitalizedTypeName, Name);
         }
 
         public void GenerateSerializationCode(TextGenerator writer)
         {
-            writer.WriteLine("if (Has{0}) {{", PropertyName);
-            writer.WriteLine("  output.Write{0}({1}, {2});", CapitalizedTypeName, Number, PropertyName);
+            writer.WriteLine("if (has{0}) {{", PropertyName);
+            writer.WriteLine("  output.Write{0}({1}, field_names[{3}], {2});", CapitalizedTypeName, Number, PropertyName,
+                             FieldOrdinal);
             writer.WriteLine("}");
         }
 
         public void GenerateSerializedSizeCode(TextGenerator writer)
         {
-            writer.WriteLine("if (Has{0}) {{", PropertyName);
+            writer.WriteLine("if (has{0}) {{", PropertyName);
             writer.WriteLine("  size += pb::CodedOutputStream.Compute{0}Size({1}, {2});",
                              CapitalizedTypeName, Number, PropertyName);
             writer.WriteLine("}");

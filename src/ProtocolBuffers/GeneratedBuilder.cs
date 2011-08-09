@@ -49,7 +49,7 @@ namespace Google.ProtocolBuffers
     /// </summary>
     public abstract class GeneratedBuilder<TMessage, TBuilder> : AbstractBuilder<TMessage, TBuilder>
         where TMessage : GeneratedMessage<TMessage, TBuilder>
-        where TBuilder : GeneratedBuilder<TMessage, TBuilder>
+        where TBuilder : GeneratedBuilder<TMessage, TBuilder>, new()
     {
         /// <summary>
         /// Returns the message being built at the moment.
@@ -115,8 +115,8 @@ namespace Google.ProtocolBuffers
         /// </summary>
         /// <returns>true unless the tag is an end-group tag</returns>
         [CLSCompliant(false)]
-        protected virtual bool ParseUnknownField(CodedInputStream input, UnknownFieldSet.Builder unknownFields,
-                                                 ExtensionRegistry extensionRegistry, uint tag)
+        protected virtual bool ParseUnknownField(ICodedInputStream input, UnknownFieldSet.Builder unknownFields,
+                                                 ExtensionRegistry extensionRegistry, uint tag, string fieldName)
         {
             return unknownFields.MergeFieldFrom(tag, input);
         }

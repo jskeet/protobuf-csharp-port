@@ -56,16 +56,31 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\ProtocolBuffers.Test\TestProtos\UnitTestImportProtoFile.cs">
+      <Link>UnitTestImportProtoFile.cs</Link>
+    </Compile>
+    <Compile Include="..\ProtocolBuffers.Test\TestProtos\UnitTestProtoFile.cs">
+      <Link>UnitTestProtoFile.cs</Link>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProtocolBuffers.Serialization\ProtocolBuffers.Serialization.csproj">
+      <Project>{231391AF-449C-4a39-986C-AD7F270F4750}</Project>
+      <Name>ProtocolBuffers.Serialization</Name>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\ProtocolBuffers\ProtocolBuffers.csproj">
       <Project>{6908BDCE-D925-43F3-94AC-A531E6DF2591}</Project>
       <Name>ProtocolBuffers</Name>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -60,6 +60,7 @@ namespace Google.ProtocolBuffers
     /// </summary>
     public sealed class UnknownField
     {
+        public const string UnknownFieldName = "unknown_field";
         private static readonly UnknownField defaultInstance = CreateBuilder().Build();
         private readonly ReadOnlyCollection<ulong> varintList;
         private readonly ReadOnlyCollection<uint> fixed32List;
@@ -173,23 +174,23 @@ namespace Google.ProtocolBuffers
         /// Serializes the field, including the field number, and writes it to
         /// <paramref name="output"/>.
         /// </summary>
-        public void WriteTo(int fieldNumber, CodedOutputStream output)
+        public void WriteTo(int fieldNumber, ICodedOutputStream output)
         {
             foreach (ulong value in varintList)
             {
-                output.WriteUInt64(fieldNumber, value);
+                output.WriteUnknownField(fieldNumber, WireFormat.WireType.Varint, value);
             }
             foreach (uint value in fixed32List)
             {
-                output.WriteFixed32(fieldNumber, value);
+                output.WriteUnknownField(fieldNumber, WireFormat.WireType.Fixed32, value);
             }
             foreach (ulong value in fixed64List)
             {
-                output.WriteFixed64(fieldNumber, value);
+                output.WriteUnknownField(fieldNumber, WireFormat.WireType.Fixed64, value);
             }
             foreach (ByteString value in lengthDelimitedList)
             {
-                output.WriteBytes(fieldNumber, value);
+                output.WriteUnknownBytes(fieldNumber, value);
             }
             foreach (UnknownFieldSet value in groupList)
             {
@@ -237,11 +238,11 @@ namespace Google.ProtocolBuffers
         /// </summary>
         /// <param name="fieldNumber"></param>
         /// <param name="output"></param>
-        public void WriteAsMessageSetExtensionTo(int fieldNumber, CodedOutputStream output)
+        public void WriteAsMessageSetExtensionTo(int fieldNumber, ICodedOutputStream output)
         {
             foreach (ByteString value in lengthDelimitedList)
             {
-                output.WriteRawMessageSetExtension(fieldNumber, value);
+                output.WriteMessageSetExtension(fieldNumber, UnknownFieldName, value);
             }
         }
 

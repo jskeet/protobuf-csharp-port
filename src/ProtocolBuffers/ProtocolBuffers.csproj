@@ -99,10 +99,12 @@
     <Compile Include="AbstractMessageLite.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ByteArray.cs" />
     <Compile Include="ByteString.cs" />
     <Compile Include="Collections\Enumerables.cs" />
     <Compile Include="Collections\IPopsicleList.cs" />
     <Compile Include="Collections\PopsicleList.cs" />
+    <Compile Include="CodedOutputStream.ComputeSize.cs" />
     <Compile Include="Delegates.cs" />
     <Compile Include="CodedInputStream.cs" />
     <Compile Include="CodedOutputStream.cs" />
@@ -163,6 +165,8 @@
     <Compile Include="IBuilderLite.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ICodedInputStream.cs" />
+    <Compile Include="ICodedOutputStream.cs" />
     <Compile Include="IMessage.cs" />
     <Compile Include="IMessageLite.cs" />
     <Compile Include="InvalidProtocolBufferException.cs" />

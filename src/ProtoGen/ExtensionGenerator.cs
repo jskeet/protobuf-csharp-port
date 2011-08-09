@@ -35,7 +35,6 @@
 #endregion
 
 using System;
-using System.Globalization;
 using Google.ProtocolBuffers.Descriptors;
 
 namespace Google.ProtocolBuffers.ProtoGen
@@ -48,7 +47,7 @@ namespace Google.ProtocolBuffers.ProtoGen
         private readonly string name;
 
         internal ExtensionGenerator(FieldDescriptor descriptor)
-            : base(descriptor)
+            : base(descriptor, 0)
         {
             if (Descriptor.ExtensionScope != null)
             {
@@ -124,10 +123,12 @@ namespace Google.ProtocolBuffers.ProtoGen
                 writer.WriteLine("\"{0}\",", Descriptor.FullName);
                 writer.WriteLine("{0}.DefaultInstance,", extends);
                 if (!Descriptor.IsRepeated)
+                {
                     writer.WriteLine("{0},",
                                      Descriptor.HasDefaultValue
                                          ? DefaultValue
                                          : IsNullableType ? "null" : "default(" + type + ")");
+                }
                 writer.WriteLine("{0},",
                                  (Descriptor.MappedType == MappedType.Message) ? type + ".DefaultInstance" : "null");
                 writer.WriteLine("{0},",

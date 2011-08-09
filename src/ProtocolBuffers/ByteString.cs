@@ -37,6 +37,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Google.ProtocolBuffers
@@ -91,7 +92,7 @@ namespace Google.ProtocolBuffers
 
         public byte[] ToByteArray()
         {
-            return (byte[])bytes.Clone();
+            return (byte[]) bytes.Clone();
         }
 
         public string ToBase64()
@@ -104,7 +105,7 @@ namespace Google.ProtocolBuffers
         /// </summary>
         public static ByteString FromBase64(string bytes)
         {
-            return new ByteString(System.Convert.FromBase64String(bytes));
+            return new ByteString(Convert.FromBase64String(bytes));
         }
 
         /// <summary>
@@ -123,7 +124,7 @@ namespace Google.ProtocolBuffers
         public static ByteString CopyFrom(byte[] bytes, int offset, int count)
         {
             byte[] portion = new byte[count];
-            Array.Copy(bytes, offset, portion, 0, count);
+            ByteArray.Copy(bytes, offset, portion, 0, count);
             return new ByteString(portion);
         }
 
@@ -251,7 +252,10 @@ namespace Google.ProtocolBuffers
             }
         }
 
-        internal void WriteTo(CodedOutputStream outputStream)
+        /// <summary>
+        /// Used internally by CodedOutputStream to avoid creating a copy for the write
+        /// </summary>
+        internal void WriteRawBytesTo(CodedOutputStream outputStream)
         {
             outputStream.WriteRawBytes(bytes, 0, bytes.Length);
         }
@@ -259,15 +263,15 @@ namespace Google.ProtocolBuffers
         /// <summary>
         /// Copies the entire byte array to the destination array provided at the offset specified.
         /// </summary>
-        public void CopyTo(Array array, int position)
+        public void CopyTo(byte[] array, int position)
         {
-            Array.Copy(bytes, 0, array, position, bytes.Length);
+            ByteArray.Copy(bytes, 0, array, position, bytes.Length);
         }
 
         /// <summary>
         /// Writes the entire byte array to the provided stream
         /// </summary>
-        public void WriteTo(System.IO.Stream outputStream)
+        public void WriteTo(Stream outputStream)
         {
             outputStream.Write(bytes, 0, bytes.Length);
         }

@@ -34,15 +34,14 @@
 
 #endregion
 
-using Google.ProtocolBuffers.DescriptorProtos;
 using Google.ProtocolBuffers.Descriptors;
 
 namespace Google.ProtocolBuffers.ProtoGen
 {
     internal class RepeatedPrimitiveFieldGenerator : FieldGeneratorBase, IFieldSourceGenerator
     {
-        internal RepeatedPrimitiveFieldGenerator(FieldDescriptor descriptor)
-            : base(descriptor)
+        internal RepeatedPrimitiveFieldGenerator(FieldDescriptor descriptor, int fieldOrdinal)
+            : base(descriptor, fieldOrdinal)
         {
         }
 
@@ -121,19 +120,8 @@ namespace Google.ProtocolBuffers.ProtoGen
 
         public void GenerateParsingCode(TextGenerator writer)
         {
-            if (Descriptor.IsPacked)
-            {
-                writer.WriteLine("int length = input.ReadInt32();");
-                writer.WriteLine("int limit = input.PushLimit(length);");
-                writer.WriteLine("while (!input.ReachedLimit) {");
-                writer.WriteLine("  Add{0}(input.Read{1}());", PropertyName, CapitalizedTypeName);
-                writer.WriteLine("}");
-                writer.WriteLine("input.PopLimit(limit);");
-            }
-            else
-            {
-                writer.WriteLine("Add{0}(input.Read{1}());", PropertyName, CapitalizedTypeName);
-            }
+            writer.WriteLine("input.Read{0}Array(tag, field_name, result.{1}_);", CapitalizedTypeName, Name,
+                             Descriptor.FieldType);
         }
 
         public void GenerateSerializationCode(TextGenerator writer)
@@ -142,17 +130,13 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.Indent();
             if (Descriptor.IsPacked)
             {
-                writer.WriteLine("output.WriteRawVarint32({0});", WireFormat.MakeTag(Descriptor));
-                writer.WriteLine("output.WriteRawVarint32((uint) {0}MemoizedSerializedSize);", Name);
-                writer.WriteLine("foreach ({0} element in {1}_) {{", TypeName, Name);
-                writer.WriteLine("  output.Write{0}NoTag(element);", CapitalizedTypeName);
-                writer.WriteLine("}");
+                writer.WriteLine("output.WritePacked{0}Array({1}, field_names[{3}], {2}MemoizedSerializedSize, {2}_);",
+                                 CapitalizedTypeName, Number, Name, FieldOrdinal, Descriptor.FieldType);
             }
             else
             {
-                writer.WriteLine("foreach ({0} element in {1}_) {{", TypeName, Name);
-                writer.WriteLine("  output.Write{0}({1}, element);", CapitalizedTypeName, Number);
-                writer.WriteLine("}");
+                writer.WriteLine("output.Write{0}Array({1}, field_names[{3}], {2}_);", CapitalizedTypeName, Number, Name,
+                                 FieldOrdinal, Descriptor.FieldType);
             }
             writer.Outdent();
             writer.WriteLine("}");

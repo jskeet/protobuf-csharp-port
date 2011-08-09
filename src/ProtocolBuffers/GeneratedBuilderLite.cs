@@ -35,7 +35,6 @@
 #endregion
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Google.ProtocolBuffers
@@ -98,10 +97,10 @@ namespace Google.ProtocolBuffers
         /// </summary>
         /// <returns>true unless the tag is an end-group tag</returns>
         [CLSCompliant(false)]
-        protected virtual bool ParseUnknownField(CodedInputStream input,
-                                                 ExtensionRegistry extensionRegistry, uint tag)
+        protected virtual bool ParseUnknownField(ICodedInputStream input,
+                                                 ExtensionRegistry extensionRegistry, uint tag, string fieldName)
         {
-            return input.SkipField(tag);
+            return input.SkipField();
         }
 
         /// <summary>

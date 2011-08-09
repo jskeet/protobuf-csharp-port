@@ -59,6 +59,8 @@ namespace Google.ProtocolBuffers.TestProtos {
   [global::System.CodeDom.Compiler.GeneratedCodeAttribute("ProtoGen", "2.3.0.277")]
   public sealed partial class OptionsMessage : pb::GeneratedMessage<OptionsMessage, OptionsMessage.Builder> {
     private static readonly OptionsMessage defaultInstance = new Builder().BuildPartial();
+    private static readonly string[] _optionsMessageFieldNames = new string[] { "customized", "normal", "options_message" };
+    private static readonly uint[] _optionsMessageFieldTags = new uint[] { 26, 10, 18 };
     public static OptionsMessage DefaultInstance {
       get { return defaultInstance; }
     }
@@ -115,16 +117,17 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
     }
     
-    public override void WriteTo(pb::CodedOutputStream output) {
+    public override void WriteTo(pb::ICodedOutputStream output) {
       int size = SerializedSize;
-      if (HasNormal) {
-        output.WriteString(1, Normal);
+      string[] field_names = _optionsMessageFieldNames;
+      if (hasNormal) {
+        output.WriteString(1, field_names[1], Normal);
       }
-      if (HasOptionsMessage_) {
-        output.WriteString(2, OptionsMessage_);
+      if (hasOptionsMessage_) {
+        output.WriteString(2, field_names[2], OptionsMessage_);
       }
-      if (HasCustomName) {
-        output.WriteString(3, CustomName);
+      if (hasCustomName) {
+        output.WriteString(3, field_names[0], CustomName);
       }
       UnknownFields.WriteTo(output);
     }
@@ -136,13 +139,13 @@ namespace Google.ProtocolBuffers.TestProtos {
         if (size != -1) return size;
         
         size = 0;
-        if (HasNormal) {
+        if (hasNormal) {
           size += pb::CodedOutputStream.ComputeStringSize(1, Normal);
         }
-        if (HasOptionsMessage_) {
+        if (hasOptionsMessage_) {
           size += pb::CodedOutputStream.ComputeStringSize(2, OptionsMessage_);
         }
-        if (HasCustomName) {
+        if (hasCustomName) {
           size += pb::CodedOutputStream.ComputeStringSize(3, CustomName);
         }
         size += UnknownFields.SerializedSize;
@@ -175,10 +178,10 @@ namespace Google.ProtocolBuffers.TestProtos {
     public static OptionsMessage ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static OptionsMessage ParseFrom(pb::CodedInputStream input) {
+    public static OptionsMessage ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static OptionsMessage ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static OptionsMessage ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     public static Builder CreateBuilder() { return new Builder(); }
@@ -253,20 +256,30 @@ namespace Google.ProtocolBuffers.TestProtos {
         return this;
       }
       
-      public override Builder MergeFrom(pb::CodedInputStream input) {
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
         return MergeFrom(input, pb::ExtensionRegistry.Empty);
       }
       
-      public override Builder MergeFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
         pb::UnknownFieldSet.Builder unknownFields = null;
-        while (true) {
-          uint tag = input.ReadTag();
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_optionsMessageFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _optionsMessageFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
           switch (tag) {
             case 0: {
-              if (unknownFields != null) {
-                this.UnknownFields = unknownFields.Build();
-              }
-              return this;
+              throw pb::InvalidProtocolBufferException.InvalidTag();
             }
             default: {
               if (pb::WireFormat.IsEndGroupTag(tag)) {
@@ -278,28 +291,33 @@ namespace Google.ProtocolBuffers.TestProtos {
               if (unknownFields == null) {
                 unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
               }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag);
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
               break;
             }
             case 10: {
-              Normal = input.ReadString();
+              result.hasNormal = input.ReadString(ref result.normal_);
               break;
             }
             case 18: {
-              OptionsMessage_ = input.ReadString();
+              result.hasOptionsMessage_ = input.ReadString(ref result.optionsMessage_);
               break;
             }
             case 26: {
-              CustomName = input.ReadString();
+              result.hasCustomName = input.ReadString(ref result.customized_);
               break;
             }
           }
         }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
       }
       
       
       public bool HasNormal {
-        get { return result.HasNormal; }
+        get { return result.hasNormal; }
       }
       public string Normal {
         get { return result.Normal; }
@@ -318,7 +336,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasOptionsMessage_ {
-        get { return result.HasOptionsMessage_; }
+        get { return result.hasOptionsMessage_; }
       }
       public string OptionsMessage_ {
         get { return result.OptionsMessage_; }
@@ -337,7 +355,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasCustomName {
-        get { return result.HasCustomName; }
+        get { return result.hasCustomName; }
       }
       public string CustomName {
         get { return result.CustomName; }

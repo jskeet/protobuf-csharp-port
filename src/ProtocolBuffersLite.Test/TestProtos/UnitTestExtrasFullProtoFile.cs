@@ -229,10 +229,10 @@ namespace Google.ProtocolBuffers.TestProtos {
         public static PhoneNumber ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
           return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
         }
-        public static PhoneNumber ParseFrom(pb::CodedInputStream input) {
+        public static PhoneNumber ParseFrom(pb::ICodedInputStream input) {
           return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
         }
-        public static PhoneNumber ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        public static PhoneNumber ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
           return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
         }
         public static Builder CreateBuilder() { return new Builder(); }
@@ -285,7 +285,7 @@ namespace Google.ProtocolBuffers.TestProtos {
           
           
           public bool HasNumber {
-            get { return result.HasNumber; }
+            get { return result.hasNumber; }
           }
           public string Number {
             get { return result.Number; }
@@ -304,7 +304,7 @@ namespace Google.ProtocolBuffers.TestProtos {
           }
           
           public bool HasType {
-           get { return result.HasType; }
+           get { return result.hasType; }
           }
           public global::Google.ProtocolBuffers.TestProtos.TestInteropPerson.Types.PhoneType Type {
             get { return result.Type; }
@@ -393,7 +393,7 @@ namespace Google.ProtocolBuffers.TestProtos {
         
         public const int ZipFieldNumber = 5;
         private bool hasZip;
-        private uint zip_ = 0;
+        private uint zip_;
         public bool HasZip {
           get { return hasZip; }
         }
@@ -426,10 +426,10 @@ namespace Google.ProtocolBuffers.TestProtos {
         public static Addresses ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
           return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
         }
-        public static Addresses ParseFrom(pb::CodedInputStream input) {
+        public static Addresses ParseFrom(pb::ICodedInputStream input) {
           return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
         }
-        public static Addresses ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        public static Addresses ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
           return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
         }
         public static Builder CreateBuilder() { return new Builder(); }
@@ -482,7 +482,7 @@ namespace Google.ProtocolBuffers.TestProtos {
           
           
           public bool HasAddress {
-            get { return result.HasAddress; }
+            get { return result.hasAddress; }
           }
           public string Address {
             get { return result.Address; }
@@ -501,7 +501,7 @@ namespace Google.ProtocolBuffers.TestProtos {
           }
           
           public bool HasAddress2 {
-            get { return result.HasAddress2; }
+            get { return result.hasAddress2; }
           }
           public string Address2 {
             get { return result.Address2; }
@@ -520,7 +520,7 @@ namespace Google.ProtocolBuffers.TestProtos {
           }
           
           public bool HasCity {
-            get { return result.HasCity; }
+            get { return result.hasCity; }
           }
           public string City {
             get { return result.City; }
@@ -539,7 +539,7 @@ namespace Google.ProtocolBuffers.TestProtos {
           }
           
           public bool HasState {
-            get { return result.HasState; }
+            get { return result.hasState; }
           }
           public string State {
             get { return result.State; }
@@ -558,7 +558,7 @@ namespace Google.ProtocolBuffers.TestProtos {
           }
           
           public bool HasZip {
-            get { return result.HasZip; }
+            get { return result.hasZip; }
           }
           [global::System.CLSCompliant(false)]
           public uint Zip {
@@ -597,7 +597,7 @@ namespace Google.ProtocolBuffers.TestProtos {
     
     public const int IdFieldNumber = 2;
     private bool hasId;
-    private int id_ = 0;
+    private int id_;
     public bool HasId {
       get { return hasId; }
     }
@@ -675,10 +675,10 @@ namespace Google.ProtocolBuffers.TestProtos {
     public static TestInteropPerson ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static TestInteropPerson ParseFrom(pb::CodedInputStream input) {
+    public static TestInteropPerson ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static TestInteropPerson ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static TestInteropPerson ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     public static Builder CreateBuilder() { return new Builder(); }
@@ -734,7 +734,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       
       
       public bool HasName {
-        get { return result.HasName; }
+        get { return result.hasName; }
       }
       public string Name {
         get { return result.Name; }
@@ -753,7 +753,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasId {
-        get { return result.HasId; }
+        get { return result.hasId; }
       }
       public int Id {
         get { return result.Id; }
@@ -771,7 +771,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasEmail {
-        get { return result.HasEmail; }
+        get { return result.hasEmail; }
       }
       public string Email {
         get { return result.Email; }
@@ -955,10 +955,10 @@ namespace Google.ProtocolBuffers.TestProtos {
     public static TestInteropEmployeeId ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static TestInteropEmployeeId ParseFrom(pb::CodedInputStream input) {
+    public static TestInteropEmployeeId ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static TestInteropEmployeeId ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static TestInteropEmployeeId ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     public static Builder CreateBuilder() { return new Builder(); }
@@ -1011,7 +1011,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       
       
       public bool HasNumber {
-        get { return result.HasNumber; }
+        get { return result.hasNumber; }
       }
       public string Number {
         get { return result.Number; }
@@ -1091,7 +1091,7 @@ namespace Google.ProtocolBuffers.TestProtos {
         
         public const int CountFieldNumber = 5;
         private bool hasCount;
-        private int count_ = 0;
+        private int count_;
         public bool HasCount {
           get { return hasCount; }
         }
@@ -1135,10 +1135,10 @@ namespace Google.ProtocolBuffers.TestProtos {
         public static SubA ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
           return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
         }
-        public static SubA ParseFrom(pb::CodedInputStream input) {
+        public static SubA ParseFrom(pb::ICodedInputStream input) {
           return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
         }
-        public static SubA ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        public static SubA ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
           return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
         }
         public static Builder CreateBuilder() { return new Builder(); }
@@ -1192,7 +1192,7 @@ namespace Google.ProtocolBuffers.TestProtos {
           
           
           public bool HasCount {
-            get { return result.HasCount; }
+            get { return result.hasCount; }
           }
           public int Count {
             get { return result.Count; }
@@ -1257,7 +1257,7 @@ namespace Google.ProtocolBuffers.TestProtos {
     
     public const int IdFieldNumber = 2;
     private bool hasId;
-    private int id_ = 0;
+    private int id_;
     public bool HasId {
       get { return hasId; }
     }
@@ -1309,10 +1309,10 @@ namespace Google.ProtocolBuffers.TestProtos {
     public static TestMissingFieldsA ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static TestMissingFieldsA ParseFrom(pb::CodedInputStream input) {
+    public static TestMissingFieldsA ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static TestMissingFieldsA ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static TestMissingFieldsA ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     public static Builder CreateBuilder() { return new Builder(); }
@@ -1365,7 +1365,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       
       
       public bool HasName {
-        get { return result.HasName; }
+        get { return result.hasName; }
       }
       public string Name {
         get { return result.Name; }
@@ -1384,7 +1384,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasId {
-        get { return result.HasId; }
+        get { return result.hasId; }
       }
       public int Id {
         get { return result.Id; }
@@ -1402,7 +1402,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasEmail {
-        get { return result.HasEmail; }
+        get { return result.hasEmail; }
       }
       public string Email {
         get { return result.Email; }
@@ -1421,7 +1421,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasTestA {
-       get { return result.HasTestA; }
+       get { return result.hasTestA; }
       }
       public global::Google.ProtocolBuffers.TestProtos.TestMissingFieldsA.Types.SubA TestA {
         get { return result.TestA; }
@@ -1441,7 +1441,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       public Builder MergeTestA(global::Google.ProtocolBuffers.TestProtos.TestMissingFieldsA.Types.SubA value) {
         pb::ThrowHelper.ThrowIfNull(value, "value");
-        if (result.HasTestA &&
+        if (result.hasTestA &&
             result.testA_ != global::Google.ProtocolBuffers.TestProtos.TestMissingFieldsA.Types.SubA.DefaultInstance) {
             result.testA_ = global::Google.ProtocolBuffers.TestProtos.TestMissingFieldsA.Types.SubA.CreateBuilder(result.testA_).MergeFrom(value).BuildPartial();
         } else {
@@ -1552,10 +1552,10 @@ namespace Google.ProtocolBuffers.TestProtos {
         public static SubB ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
           return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
         }
-        public static SubB ParseFrom(pb::CodedInputStream input) {
+        public static SubB ParseFrom(pb::ICodedInputStream input) {
           return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
         }
-        public static SubB ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+        public static SubB ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
           return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
         }
         public static Builder CreateBuilder() { return new Builder(); }
@@ -1656,7 +1656,7 @@ namespace Google.ProtocolBuffers.TestProtos {
     
     public const int IdFieldNumber = 2;
     private bool hasId;
-    private int id_ = 0;
+    private int id_;
     public bool HasId {
       get { return hasId; }
     }
@@ -1708,10 +1708,10 @@ namespace Google.ProtocolBuffers.TestProtos {
     public static TestMissingFieldsB ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static TestMissingFieldsB ParseFrom(pb::CodedInputStream input) {
+    public static TestMissingFieldsB ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static TestMissingFieldsB ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static TestMissingFieldsB ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     public static Builder CreateBuilder() { return new Builder(); }
@@ -1764,7 +1764,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       
       
       public bool HasName {
-        get { return result.HasName; }
+        get { return result.hasName; }
       }
       public string Name {
         get { return result.Name; }
@@ -1783,7 +1783,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasId {
-        get { return result.HasId; }
+        get { return result.hasId; }
       }
       public int Id {
         get { return result.Id; }
@@ -1801,7 +1801,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasWebsite {
-        get { return result.HasWebsite; }
+        get { return result.hasWebsite; }
       }
       public string Website {
         get { return result.Website; }
@@ -1820,7 +1820,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       
       public bool HasTestB {
-       get { return result.HasTestB; }
+       get { return result.hasTestB; }
       }
       public global::Google.ProtocolBuffers.TestProtos.TestMissingFieldsB.Types.SubB TestB {
         get { return result.TestB; }
@@ -1840,7 +1840,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       public Builder MergeTestB(global::Google.ProtocolBuffers.TestProtos.TestMissingFieldsB.Types.SubB value) {
         pb::ThrowHelper.ThrowIfNull(value, "value");
-        if (result.HasTestB &&
+        if (result.hasTestB &&
             result.testB_ != global::Google.ProtocolBuffers.TestProtos.TestMissingFieldsB.Types.SubB.DefaultInstance) {
             result.testB_ = global::Google.ProtocolBuffers.TestProtos.TestMissingFieldsB.Types.SubB.CreateBuilder(result.testB_).MergeFrom(value).BuildPartial();
         } else {

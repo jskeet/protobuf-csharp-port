@@ -36,20 +36,29 @@
 
 using System;
 using System.Globalization;
+using System.Text;
 using Google.ProtocolBuffers.Descriptors;
 
 namespace Google.ProtocolBuffers.ProtoGen
 {
     internal abstract class FieldGeneratorBase : SourceGeneratorBase<FieldDescriptor>
     {
-        protected FieldGeneratorBase(FieldDescriptor descriptor)
+        private readonly int _fieldOrdinal;
+
+        protected FieldGeneratorBase(FieldDescriptor descriptor, int fieldOrdinal)
             : base(descriptor)
         {
+            _fieldOrdinal = fieldOrdinal;
         }
 
         public abstract void WriteHash(TextGenerator writer);
         public abstract void WriteEquals(TextGenerator writer);
         public abstract void WriteToString(TextGenerator writer);
+
+        public int FieldOrdinal
+        {
+            get { return _fieldOrdinal; }
+        }
 
         private static bool AllPrintableAscii(string text)
         {
@@ -61,6 +70,40 @@ namespace Google.ProtocolBuffers.ProtoGen
                 }
             }
             return true;
+        }
+
+        /// <summary>
+        /// This returns true if the field has a non-default default value.  For instance this returns 
+        /// false for numerics with a default of zero '0', or booleans with a default of false.
+        /// </summary>
+        protected bool HasDefaultValue
+        {
+            get
+            {
+                switch (Descriptor.FieldType)
+                {
+                    case FieldType.Float:
+                    case FieldType.Double:
+                    case FieldType.Int32:
+                    case FieldType.Int64:
+                    case FieldType.SInt32:
+                    case FieldType.SInt64:
+                    case FieldType.SFixed32:
+                    case FieldType.SFixed64:
+                    case FieldType.UInt32:
+                    case FieldType.UInt64:
+                    case FieldType.Fixed32:
+                    case FieldType.Fixed64:
+                        {
+                            IConvertible value = (IConvertible) Descriptor.DefaultValue;
+                            return value.ToString(CultureInfo.InvariantCulture) != "0";
+                        }
+                    case FieldType.Bool:
+                        return ((bool) Descriptor.DefaultValue) == true;
+                    default:
+                        return true;
+                }
+            }
         }
 
         /// <remarks>Copy exists in ExtensionGenerator.cs</remarks>
@@ -106,20 +149,32 @@ namespace Google.ProtocolBuffers.ProtoGen
                             if (Descriptor.FieldType == FieldType.Double && value is double)
                             {
                                 if (double.IsNaN((double) value))
+                                {
                                     return "double.NaN";
+                                }
                                 if (double.IsPositiveInfinity((double) value))
+                                {
                                     return "double.PositiveInfinity";
+                                }
                                 if (double.IsNegativeInfinity((double) value))
+                                {
                                     return "double.NegativeInfinity";
+                                }
                             }
                             else if (Descriptor.FieldType == FieldType.Float && value is float)
                             {
                                 if (float.IsNaN((float) value))
+                                {
                                     return "float.NaN";
+                                }
                                 if (float.IsPositiveInfinity((float) value))
+                                {
                                     return "float.PositiveInfinity";
+                                }
                                 if (float.IsNegativeInfinity((float) value))
+                                {
                                     return "float.NegativeInfinity";
+                                }
                             }
                             return value.ToString(CultureInfo.InvariantCulture) + suffix;
                         }
@@ -134,7 +189,7 @@ namespace Google.ProtocolBuffers.ProtoGen
                         if (UseLiteRuntime && Descriptor.DefaultValue is ByteString)
                         {
                             string temp = (((ByteString) Descriptor.DefaultValue).ToBase64());
-                            return String.Format("ByteString.FromBase64(\"{0}\")", temp);
+                            return String.Format("pb::ByteString.FromBase64(\"{0}\")", temp);
                         }
                         return string.Format("(pb::ByteString) {0}.Descriptor.Fields[{1}].DefaultValue",
                                              GetClassName(Descriptor.ContainingType), Descriptor.Index);
@@ -151,10 +206,9 @@ namespace Google.ProtocolBuffers.ProtoGen
                         }
                         if (UseLiteRuntime && Descriptor.DefaultValue is String)
                         {
-                            string temp =
-                                Convert.ToBase64String(
-                                    System.Text.Encoding.UTF8.GetBytes((String) Descriptor.DefaultValue));
-                            return String.Format("ByteString.FromBase64(\"{0}\").ToStringUtf8()", temp);
+                            string temp = Convert.ToBase64String(
+                                    Encoding.UTF8.GetBytes((String) Descriptor.DefaultValue));
+                            return String.Format("pb::ByteString.FromBase64(\"{0}\").ToStringUtf8()", temp);
                         }
                         return string.Format("(string) {0}.Descriptor.Fields[{1}].DefaultValue",
                                              GetClassName(Descriptor.ContainingType), Descriptor.Index);

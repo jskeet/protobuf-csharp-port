@@ -38,12 +38,13 @@ using System;
 using System.Collections.Generic;
 using Google.ProtocolBuffers.DescriptorProtos;
 using Google.ProtocolBuffers.Descriptors;
-using ExtensionRange = Google.ProtocolBuffers.DescriptorProtos.DescriptorProto.Types.ExtensionRange;
 
 namespace Google.ProtocolBuffers.ProtoGen
 {
     internal class MessageGenerator : SourceGeneratorBase<MessageDescriptor>, ISourceGenerator
     {
+        private string[] _fieldNames;
+
         internal MessageGenerator(MessageDescriptor descriptor) : base(descriptor)
         {
         }
@@ -136,11 +137,41 @@ namespace Google.ProtocolBuffers.ProtoGen
             }
         }
 
+        public string[] FieldNames
+        {
+            get
+            {
+                if (_fieldNames == null)
+                {
+                    List<string> names = new List<string>();
+                    foreach (FieldDescriptor fieldDescriptor in Descriptor.Fields)
+                    {
+                        names.Add(fieldDescriptor.Name);
+                    }
+                    //if you change this, the search must also change in GenerateBuilderParsingMethods
+                    names.Sort(StringComparer.Ordinal);
+                    _fieldNames = names.ToArray();
+                }
+                return _fieldNames;
+            }
+        }
+
+        internal int FieldOrdinal(FieldDescriptor field)
+        {
+            return Array.BinarySearch(FieldNames, field.Name, StringComparer.Ordinal);
+        }
+
+        private IFieldSourceGenerator CreateFieldGenerator(FieldDescriptor fieldDescriptor)
+        {
+            return SourceGenerators.CreateFieldGenerator(fieldDescriptor, FieldOrdinal(fieldDescriptor));
+        }
+
         public void Generate(TextGenerator writer)
         {
             writer.WriteLine("[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]");
             writer.WriteLine("[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]");
-            writer.WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]", GetType().Assembly.GetName().Name, GetType().Assembly.GetName().Version);
+            writer.WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]",
+                             GetType().Assembly.GetName().Name, GetType().Assembly.GetName().Version);
             writer.WriteLine("{0} sealed partial class {1} : pb::{2}Message{3}<{1}, {1}.Builder> {{",
                              ClassAccessLevel, ClassName,
                              Descriptor.Proto.ExtensionRangeCount > 0 ? "Extendable" : "Generated",
@@ -148,6 +179,21 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.Indent();
             // Must call BuildPartial() to make sure all lists are made read-only
             writer.WriteLine("private static readonly {0} defaultInstance = new Builder().BuildPartial();", ClassName);
+
+            if (OptimizeSpeed)
+            {
+                writer.WriteLine("private static readonly string[] _{0}FieldNames = new string[] {{ {2}{1}{2} }};",
+                                 NameHelpers.UnderscoresToCamelCase(ClassName), String.Join("\", \"", FieldNames),
+                                 FieldNames.Length > 0 ? "\"" : "");
+                List<string> tags = new List<string>();
+                foreach (string name in FieldNames)
+                {
+                    tags.Add(WireFormat.MakeTag(Descriptor.FindFieldByName(name)).ToString());
+                }
+
+                writer.WriteLine("private static readonly uint[] _{0}FieldTags = new uint[] {{ {1} }};",
+                                 NameHelpers.UnderscoresToCamelCase(ClassName), String.Join(", ", tags.ToArray()));
+            }
             writer.WriteLine("public static {0} DefaultInstance {{", ClassName);
             writer.WriteLine("  get { return defaultInstance; }");
             writer.WriteLine("}");
@@ -186,7 +232,8 @@ namespace Google.ProtocolBuffers.ProtoGen
                 writer.WriteLine("#region Nested types");
                 writer.WriteLine("[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]");
                 writer.WriteLine("[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]");
-                writer.WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]", GetType().Assembly.GetName().Name, GetType().Assembly.GetName().Version);
+                writer.WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]",
+                                 GetType().Assembly.GetName().Name, GetType().Assembly.GetName().Version);
                 writer.WriteLine("public static class Types {");
                 writer.Indent();
                 WriteChildren(writer, null, Descriptor.EnumTypes);
@@ -202,7 +249,7 @@ namespace Google.ProtocolBuffers.ProtoGen
                 // Rats: we lose the debug comment here :(
                 writer.WriteLine("public const int {0} = {1};", GetFieldConstantName(fieldDescriptor),
                                  fieldDescriptor.FieldNumber);
-                SourceGenerators.CreateFieldGenerator(fieldDescriptor).GenerateMembers(writer);
+                CreateFieldGenerator(fieldDescriptor).GenerateMembers(writer);
                 writer.WriteLine();
             }
 
@@ -244,9 +291,12 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.WriteLine("int hash = GetType().GetHashCode();");
             foreach (FieldDescriptor fieldDescriptor in Descriptor.Fields)
             {
-                SourceGenerators.CreateFieldGenerator(fieldDescriptor).WriteHash(writer);
+                CreateFieldGenerator(fieldDescriptor).WriteHash(writer);
             }
-            if (callbase) writer.WriteLine("hash ^= base.GetHashCode();");
+            if (callbase)
+            {
+                writer.WriteLine("hash ^= base.GetHashCode();");
+            }
             writer.WriteLine("return hash;");
             writer.Outdent();
             writer.WriteLine("}");
@@ -258,9 +308,12 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.WriteLine("if (other == null) return false;");
             foreach (FieldDescriptor fieldDescriptor in Descriptor.Fields)
             {
-                SourceGenerators.CreateFieldGenerator(fieldDescriptor).WriteEquals(writer);
+                CreateFieldGenerator(fieldDescriptor).WriteEquals(writer);
             }
-            if (callbase) writer.WriteLine("if (!base.Equals(other)) return false;");
+            if (callbase)
+            {
+                writer.WriteLine("if (!base.Equals(other)) return false;");
+            }
             writer.WriteLine("return true;");
             writer.Outdent();
             writer.WriteLine("}");
@@ -274,9 +327,12 @@ namespace Google.ProtocolBuffers.ProtoGen
                     delegate(FieldDescriptor a, FieldDescriptor b) { return a.FieldNumber.CompareTo(b.FieldNumber); }));
             foreach (FieldDescriptor fieldDescriptor in sorted)
             {
-                SourceGenerators.CreateFieldGenerator(fieldDescriptor).WriteToString(writer);
+                CreateFieldGenerator(fieldDescriptor).WriteToString(writer);
             }
-            if (callbase) writer.WriteLine("base.PrintTo(writer);");
+            if (callbase)
+            {
+                writer.WriteLine("base.PrintTo(writer);");
+            }
             writer.Outdent();
             writer.WriteLine("}");
             writer.WriteLine("#endregion");
@@ -288,13 +344,15 @@ namespace Google.ProtocolBuffers.ProtoGen
             List<FieldDescriptor> sortedFields = new List<FieldDescriptor>(Descriptor.Fields);
             sortedFields.Sort((f1, f2) => f1.FieldNumber.CompareTo(f2.FieldNumber));
 
-            List<ExtensionRange> sortedExtensions = new List<ExtensionRange>(Descriptor.Proto.ExtensionRangeList);
+            List<DescriptorProto.Types.ExtensionRange> sortedExtensions =
+                new List<DescriptorProto.Types.ExtensionRange>(Descriptor.Proto.ExtensionRangeList);
             sortedExtensions.Sort((r1, r2) => (r1.Start.CompareTo(r2.Start)));
 
-            writer.WriteLine("public override void WriteTo(pb::CodedOutputStream output) {");
+            writer.WriteLine("public override void WriteTo(pb::ICodedOutputStream output) {");
             writer.Indent();
             // Make sure we've computed the serialized length, so that packed fields are generated correctly.
             writer.WriteLine("int size = SerializedSize;");
+            writer.WriteLine("string[] field_names = _{0}FieldNames;", NameHelpers.UnderscoresToCamelCase(ClassName));
             if (Descriptor.Proto.ExtensionRangeList.Count > 0)
             {
                 writer.WriteLine(
@@ -349,7 +407,7 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.WriteLine("size = 0;");
             foreach (FieldDescriptor field in Descriptor.Fields)
             {
-                SourceGenerators.CreateFieldGenerator(field).GenerateSerializedSizeCode(writer);
+                CreateFieldGenerator(field).GenerateSerializedSizeCode(writer);
             }
             if (Descriptor.Proto.ExtensionRangeCount > 0)
             {
@@ -376,12 +434,13 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.WriteLine();
         }
 
-        private static void GenerateSerializeOneField(TextGenerator writer, FieldDescriptor fieldDescriptor)
+        private void GenerateSerializeOneField(TextGenerator writer, FieldDescriptor fieldDescriptor)
         {
-            SourceGenerators.CreateFieldGenerator(fieldDescriptor).GenerateSerializationCode(writer);
+            CreateFieldGenerator(fieldDescriptor).GenerateSerializationCode(writer);
         }
 
-        private static void GenerateSerializeOneExtensionRange(TextGenerator writer, ExtensionRange extensionRange)
+        private static void GenerateSerializeOneExtensionRange(TextGenerator writer,
+                                                               DescriptorProto.Types.ExtensionRange extensionRange)
         {
             writer.WriteLine("extensionWriter.WriteUntil({0}, output);", extensionRange.End);
         }
@@ -423,11 +482,11 @@ namespace Google.ProtocolBuffers.ProtoGen
                 ClassName);
             writer.WriteLine("  return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();");
             writer.WriteLine("}");
-            writer.WriteLine("public static {0} ParseFrom(pb::CodedInputStream input) {{", ClassName);
+            writer.WriteLine("public static {0} ParseFrom(pb::ICodedInputStream input) {{", ClassName);
             writer.WriteLine("  return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();");
             writer.WriteLine("}");
             writer.WriteLine(
-                "public static {0} ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {{",
+                "public static {0} ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {{",
                 ClassName);
             writer.WriteLine("  return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();");
             writer.WriteLine("}");
@@ -492,7 +551,8 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.WriteLine();
             writer.WriteLine("[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]");
             writer.WriteLine("[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]");
-            writer.WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]", GetType().Assembly.GetName().Name, GetType().Assembly.GetName().Version);
+            writer.WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]",
+                             GetType().Assembly.GetName().Name, GetType().Assembly.GetName().Version);
             writer.WriteLine("{0} sealed partial class Builder : pb::{2}Builder{3}<{1}, Builder> {{",
                              ClassAccessLevel, ClassName,
                              Descriptor.Proto.ExtensionRangeCount > 0 ? "Extendable" : "Generated", RuntimeSuffix);
@@ -509,7 +569,7 @@ namespace Google.ProtocolBuffers.ProtoGen
             {
                 writer.WriteLine();
                 // No field comment :(
-                SourceGenerators.CreateFieldGenerator(field).GenerateBuilderMembers(writer);
+                CreateFieldGenerator(field).GenerateBuilderMembers(writer);
             }
             writer.Outdent();
             writer.WriteLine("}");
@@ -517,7 +577,7 @@ namespace Google.ProtocolBuffers.ProtoGen
 
         private void GenerateCommonBuilderMethods(TextGenerator writer)
         {
-            writer.WriteLine("{0} Builder() {{}}", ClassAccessLevel);
+            writer.WriteLine("public Builder() {{}}", ClassAccessLevel);
             writer.WriteLine();
             writer.WriteLine("{0} result = new {0}();", ClassName);
             writer.WriteLine();
@@ -554,7 +614,7 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.WriteLine("}");
             foreach (FieldDescriptor field in Descriptor.Fields)
             {
-                SourceGenerators.CreateFieldGenerator(field).GenerateBuildingCode(writer);
+                CreateFieldGenerator(field).GenerateBuildingCode(writer);
             }
             writer.WriteLine("{0} returnMe = result;", ClassName);
             writer.WriteLine("result = null;");
@@ -581,7 +641,7 @@ namespace Google.ProtocolBuffers.ProtoGen
                 writer.WriteLine("if (other == {0}.DefaultInstance) return this;", FullClassName);
                 foreach (FieldDescriptor field in Descriptor.Fields)
                 {
-                    SourceGenerators.CreateFieldGenerator(field).GenerateMergingCode(writer);
+                    CreateFieldGenerator(field).GenerateMergingCode(writer);
                 }
                 // if message type has extensions
                 if (Descriptor.Proto.ExtensionRangeCount > 0)
@@ -604,30 +664,47 @@ namespace Google.ProtocolBuffers.ProtoGen
             List<FieldDescriptor> sortedFields = new List<FieldDescriptor>(Descriptor.Fields);
             sortedFields.Sort((f1, f2) => f1.FieldNumber.CompareTo(f2.FieldNumber));
 
-            writer.WriteLine("public override Builder MergeFrom(pb::CodedInputStream input) {");
+            writer.WriteLine("public override Builder MergeFrom(pb::ICodedInputStream input) {");
             writer.WriteLine("  return MergeFrom(input, pb::ExtensionRegistry.Empty);");
             writer.WriteLine("}");
             writer.WriteLine();
             writer.WriteLine(
-                "public override Builder MergeFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {");
+                "public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {");
             writer.Indent();
             if (!UseLiteRuntime)
             {
                 writer.WriteLine("pb::UnknownFieldSet.Builder unknownFields = null;");
             }
-            writer.WriteLine("while (true) {");
+            writer.WriteLine("uint tag;");
+            writer.WriteLine("string field_name;");
+            writer.WriteLine("while (input.ReadTag(out tag, out field_name)) {");
             writer.Indent();
-            writer.WriteLine("uint tag = input.ReadTag();");
+            writer.WriteLine("if(tag == 0 && field_name != null) {");
+            writer.Indent();
+            //if you change from StringComparer.Ordinal, the array sort in FieldNames { get; } must also change
+            writer.WriteLine(
+                "int field_ordinal = global::System.Array.BinarySearch(_{0}FieldNames, field_name, global::System.StringComparer.Ordinal);",
+                NameHelpers.UnderscoresToCamelCase(ClassName));
+            writer.WriteLine("if(field_ordinal >= 0)");
+            writer.WriteLine("  tag = _{0}FieldTags[field_ordinal];", NameHelpers.UnderscoresToCamelCase(ClassName));
+            writer.WriteLine("else {");
+            if (!UseLiteRuntime)
+            {
+                writer.WriteLine("  if (unknownFields == null) {"); // First unknown field - create builder now
+                writer.WriteLine("    unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);");
+                writer.WriteLine("  }");
+            }
+            writer.WriteLine("  ParseUnknownField(input, {0}extensionRegistry, tag, field_name);",
+                             UseLiteRuntime ? "" : "unknownFields, ");
+            writer.WriteLine("  continue;");
+            writer.WriteLine("}");
+            writer.Outdent();
+            writer.WriteLine("}");
+
             writer.WriteLine("switch (tag) {");
             writer.Indent();
             writer.WriteLine("case 0: {"); // 0 signals EOF / limit reached
-            if (!UseLiteRuntime)
-            {
-                writer.WriteLine("  if (unknownFields != null) {");
-                writer.WriteLine("    this.UnknownFields = unknownFields.Build();");
-                writer.WriteLine("  }");
-            }
-            writer.WriteLine("  return this;");
+            writer.WriteLine("  throw pb::InvalidProtocolBufferException.InvalidTag();");
             writer.WriteLine("}");
             writer.WriteLine("default: {");
             writer.WriteLine("  if (pb::WireFormat.IsEndGroupTag(tag)) {");
@@ -645,16 +722,26 @@ namespace Google.ProtocolBuffers.ProtoGen
                 writer.WriteLine("    unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);");
                 writer.WriteLine("  }");
             }
-            writer.WriteLine("  ParseUnknownField(input, {0}extensionRegistry, tag);",
+            writer.WriteLine("  ParseUnknownField(input, {0}extensionRegistry, tag, field_name);",
                              UseLiteRuntime ? "" : "unknownFields, ");
             writer.WriteLine("  break;");
             writer.WriteLine("}");
             foreach (FieldDescriptor field in sortedFields)
             {
-                uint tag = WireFormat.MakeTag(field);
+                WireFormat.WireType wt = WireFormat.GetWireType(field.FieldType);
+                uint tag = WireFormat.MakeTag(field.FieldNumber, wt);
+
+                if (field.IsRepeated &&
+                    (wt == WireFormat.WireType.Varint || wt == WireFormat.WireType.Fixed32 ||
+                     wt == WireFormat.WireType.Fixed64))
+                {
+                    writer.WriteLine("case {0}:",
+                                     WireFormat.MakeTag(field.FieldNumber, WireFormat.WireType.LengthDelimited));
+                }
+
                 writer.WriteLine("case {0}: {{", tag);
                 writer.Indent();
-                SourceGenerators.CreateFieldGenerator(field).GenerateParsingCode(writer);
+                CreateFieldGenerator(field).GenerateParsingCode(writer);
                 writer.WriteLine("break;");
                 writer.Outdent();
                 writer.WriteLine("}");
@@ -663,6 +750,14 @@ namespace Google.ProtocolBuffers.ProtoGen
             writer.WriteLine("}");
             writer.Outdent();
             writer.WriteLine("}");
+            writer.WriteLine();
+            if (!UseLiteRuntime)
+            {
+                writer.WriteLine("if (unknownFields != null) {");
+                writer.WriteLine("  this.UnknownFields = unknownFields.Build();");
+                writer.WriteLine("}");
+            }
+            writer.WriteLine("return this;");
             writer.Outdent();
             writer.WriteLine("}");
             writer.WriteLine();

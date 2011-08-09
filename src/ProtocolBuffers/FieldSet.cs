@@ -144,17 +144,19 @@ namespace Google.ProtocolBuffers
         }
 
 #if !LITE
-    /// <summary>
-    /// Force coercion to full descriptor dictionary.
-    /// </summary>
-        internal IDictionary<Descriptors.FieldDescriptor, object> AllFieldDescriptors
+        /// <summary>
+        /// Force coercion to full descriptor dictionary.
+        /// </summary>
+        internal IDictionary<FieldDescriptor, object> AllFieldDescriptors
         {
             get
             {
-                SortedList<Descriptors.FieldDescriptor, object> copy =
-                    new SortedList<Google.ProtocolBuffers.Descriptors.FieldDescriptor, object>();
+                SortedList<FieldDescriptor, object> copy =
+                    new SortedList<FieldDescriptor, object>();
                 foreach (KeyValuePair<IFieldDescriptorLite, object> fd in fields)
-                    copy.Add((Descriptors.FieldDescriptor) fd.Key, fd.Value);
+                {
+                    copy.Add((FieldDescriptor) fd.Key, fd.Value);
+                }
                 return Dictionaries.AsReadOnly(copy);
             }
         }
@@ -390,13 +392,15 @@ namespace Google.ProtocolBuffers
         }
 
 #if !LITE
-    /// <summary>
-    /// See <see cref="IBuilder{TMessage, TBuilder}.MergeFrom(IMessageLite)" />
-    /// </summary>
+        /// <summary>
+        /// See <see cref="IBuilder{TMessage, TBuilder}.MergeFrom(IMessageLite)" />
+        /// </summary>
         public void MergeFrom(IMessage other)
         {
-            foreach (KeyValuePair<Descriptors.FieldDescriptor, object> fd in other.AllFields)
+            foreach (KeyValuePair<FieldDescriptor, object> fd in other.AllFields)
+            {
                 MergeField(fd.Key, fd.Value);
+            }
         }
 #endif
 
@@ -455,7 +459,7 @@ namespace Google.ProtocolBuffers
         /// <summary>
         /// See <see cref="IMessageLite.WriteTo(CodedOutputStream)" />.
         /// </summary>
-        public void WriteTo(CodedOutputStream output)
+        public void WriteTo(ICodedOutputStream output)
         {
             foreach (KeyValuePair<IFieldDescriptorLite, object> entry in fields)
             {
@@ -466,11 +470,11 @@ namespace Google.ProtocolBuffers
         /// <summary>
         /// Writes a single field to a CodedOutputStream.
         /// </summary>
-        public void WriteField(IFieldDescriptorLite field, Object value, CodedOutputStream output)
+        public void WriteField(IFieldDescriptorLite field, Object value, ICodedOutputStream output)
         {
             if (field.IsExtension && field.MessageSetWireFormat)
             {
-                output.WriteMessageSetExtension(field.FieldNumber, (IMessageLite) value);
+                output.WriteMessageSetExtension(field.FieldNumber, field.Name, (IMessageLite) value);
             }
             else
             {
@@ -479,31 +483,16 @@ namespace Google.ProtocolBuffers
                     IEnumerable valueList = (IEnumerable) value;
                     if (field.IsPacked)
                     {
-                        output.WriteTag(field.FieldNumber, WireFormat.WireType.LengthDelimited);
-                        // Compute the total data size so the length can be written.
-                        int dataSize = 0;
-                        foreach (object element in valueList)
-                        {
-                            dataSize += CodedOutputStream.ComputeFieldSizeNoTag(field.FieldType, element);
-                        }
-                        output.WriteRawVarint32((uint) dataSize);
-                        // Write the data itself, without any tags.
-                        foreach (object element in valueList)
-                        {
-                            output.WriteFieldNoTag(field.FieldType, element);
-                        }
+                        output.WritePackedArray(field.FieldType, field.FieldNumber, field.Name, valueList);
                     }
                     else
                     {
-                        foreach (object element in valueList)
-                        {
-                            output.WriteField(field.FieldType, field.FieldNumber, element);
-                        }
+                        output.WriteArray(field.FieldType, field.FieldNumber, field.Name, valueList);
                     }
                 }
                 else
                 {
-                    output.WriteField(field.FieldType, field.FieldNumber, value);
+                    output.WriteField(field.FieldType, field.FieldNumber, field.Name, value);
                 }
             }
         }
@@ -627,8 +616,8 @@ namespace Google.ProtocolBuffers
                 // field name and other useful info in the exception.
                 string message = "Wrong object type used with protocol message reflection.";
 #if !LITE
-                Google.ProtocolBuffers.Descriptors.FieldDescriptor fieldinfo =
-                    field as Google.ProtocolBuffers.Descriptors.FieldDescriptor;
+                FieldDescriptor fieldinfo =
+                    field as FieldDescriptor;
                 if (fieldinfo != null)
                 {
                     message += "Message type \"" + fieldinfo.ContainingType.FullName;

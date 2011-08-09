@@ -37,6 +37,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Google.ProtocolBuffers.Collections;
 using Google.ProtocolBuffers.Descriptors;
 
@@ -138,7 +139,7 @@ namespace Google.ProtocolBuffers
         /// of the message before the data, then making sure you limit the input to
         /// that size when receiving the data. Alternatively, use WriteDelimitedTo(Stream).
         /// </remarks>
-        public override void WriteTo(CodedOutputStream output)
+        public override void WriteTo(ICodedOutputStream output)
         {
             foreach (KeyValuePair<FieldDescriptor, object> entry in AllFields)
             {
@@ -150,29 +151,16 @@ namespace Google.ProtocolBuffers
                     IEnumerable valueList = (IEnumerable) entry.Value;
                     if (field.IsPacked)
                     {
-                        output.WriteTag(field.FieldNumber, WireFormat.WireType.LengthDelimited);
-                        int dataSize = 0;
-                        foreach (object element in valueList)
-                        {
-                            dataSize += CodedOutputStream.ComputeFieldSizeNoTag(field.FieldType, element);
-                        }
-                        output.WriteRawVarint32((uint) dataSize);
-                        foreach (object element in valueList)
-                        {
-                            output.WriteFieldNoTag(field.FieldType, element);
-                        }
+                        output.WritePackedArray(field.FieldType, field.FieldNumber, field.Name, valueList);
                     }
                     else
                     {
-                        foreach (object element in valueList)
-                        {
-                            output.WriteField(field.FieldType, field.FieldNumber, element);
-                        }
+                        output.WriteArray(field.FieldType, field.FieldNumber, field.Name, valueList);
                     }
                 }
                 else
                 {
-                    output.WriteField(field.FieldType, field.FieldNumber, entry.Value);
+                    output.WriteField(field.FieldType, field.FieldNumber, field.Name, entry.Value);
                 }
             }
 

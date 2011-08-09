@@ -40,8 +40,8 @@ namespace Google.ProtocolBuffers.ProtoGen
 {
     internal class RepeatedMessageFieldGenerator : FieldGeneratorBase, IFieldSourceGenerator
     {
-        internal RepeatedMessageFieldGenerator(FieldDescriptor descriptor)
-            : base(descriptor)
+        internal RepeatedMessageFieldGenerator(FieldDescriptor descriptor, int fieldOrdinal)
+            : base(descriptor, fieldOrdinal)
         {
         }
 
@@ -121,22 +121,18 @@ namespace Google.ProtocolBuffers.ProtoGen
 
         public void GenerateParsingCode(TextGenerator writer)
         {
-            writer.WriteLine("{0}.Builder subBuilder = {0}.CreateBuilder();", TypeName);
-            if (Descriptor.FieldType == FieldType.Group)
-            {
-                writer.WriteLine("input.ReadGroup({0}, subBuilder, extensionRegistry);", Number);
-            }
-            else
-            {
-                writer.WriteLine("input.ReadMessage(subBuilder, extensionRegistry);");
-            }
-            writer.WriteLine("Add{0}(subBuilder.BuildPartial());", PropertyName);
+            writer.WriteLine(
+                "input.Read{0}Array(tag, field_name, result.{1}_, {2}.DefaultInstance, extensionRegistry);",
+                MessageOrGroup, Name, TypeName);
         }
 
         public void GenerateSerializationCode(TextGenerator writer)
         {
-            writer.WriteLine("foreach ({0} element in {1}List) {{", TypeName, PropertyName);
-            writer.WriteLine("  output.Write{0}({1}, element);", MessageOrGroup, Number);
+            writer.WriteLine("if ({0}_.Count > 0) {{", Name);
+            writer.Indent();
+            writer.WriteLine("output.Write{0}Array({1}, field_names[{3}], {2}_);", MessageOrGroup, Number, Name,
+                             FieldOrdinal, Descriptor.FieldType);
+            writer.Outdent();
             writer.WriteLine("}");
         }
 

@@ -75,14 +75,17 @@
     <Compile Include="CodedInputStreamTest.cs" />
     <Compile Include="CodedOutputStreamTest.cs" />
     <Compile Include="Collections\PopsicleListTest.cs" />
-    <Compile Include="CompatTests\BinaryCompatibilityTests.cs" />
-    <Compile Include="CompatTests\CompatibilityTests.cs" />
-    <Compile Include="CompatTests\TestResources.Designer.cs">
+    <Compile Include="Compatibility\BinaryCompatibilityTests.cs" />
+    <Compile Include="Compatibility\CompatibilityTests.cs" />
+    <Compile Include="Compatibility\DictionaryCompatibilityTests.cs" />
+    <Compile Include="Compatibility\JsonCompatibilityTests.cs" />
+    <Compile Include="Compatibility\TestResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>TestResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="CompatTests\TextCompatibilityTests.cs" />
+    <Compile Include="Compatibility\TextCompatibilityTests.cs" />
+    <Compile Include="Compatibility\XmlCompatibilityTests.cs" />
     <Compile Include="CSharpOptionsTest.cs" />
     <Compile Include="DescriptorsTest.cs" />
     <Compile Include="Descriptors\MessageDescriptorTest.cs" />
@@ -114,11 +117,17 @@
     <Compile Include="TestProtos\UnitTestXmlSerializerTestProtoFile.cs" />
     <Compile Include="TestRpcGenerator.cs" />
     <Compile Include="TestUtil.cs" />
+    <Compile Include="TestWriterFormatJson.cs" />
+    <Compile Include="TestWriterFormatXml.cs" />
     <Compile Include="TextFormatTest.cs" />
     <Compile Include="UnknownFieldSetTest.cs" />
     <Compile Include="WireFormatTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProtocolBuffers.Serialization\ProtocolBuffers.Serialization.csproj">
+      <Project>{231391AF-449C-4a39-986C-AD7F270F4750}</Project>
+      <Name>ProtocolBuffers.Serialization</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProtocolBuffers\ProtocolBuffers.csproj">
       <Project>{6908BDCE-D925-43F3-94AC-A531E6DF2591}</Project>
       <Name>ProtocolBuffers</Name>
@@ -142,11 +151,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="CompatTests\google_message1.dat" />
-    <None Include="CompatTests\google_message2.dat" />
+    <None Include="Compatibility\google_message1.dat" />
+    <None Include="Compatibility\google_message2.dat" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CompatTests\TestResources.resx">
+    <EmbeddedResource Include="Compatibility\TestResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>TestResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>

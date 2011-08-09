@@ -63,6 +63,8 @@ namespace Google.ProtocolBuffers.TestProtos {
   [global::System.CodeDom.Compiler.GeneratedCodeAttribute("ProtoGen", "2.3.0.277")]
   public sealed partial class TestEmbedOptimizedForSize : pb::GeneratedMessage<TestEmbedOptimizedForSize, TestEmbedOptimizedForSize.Builder> {
     private static readonly TestEmbedOptimizedForSize defaultInstance = new Builder().BuildPartial();
+    private static readonly string[] _testEmbedOptimizedForSizeFieldNames = new string[] { "optional_message", "repeated_message" };
+    private static readonly uint[] _testEmbedOptimizedForSizeFieldTags = new uint[] { 10, 18 };
     public static TestEmbedOptimizedForSize DefaultInstance {
       get { return defaultInstance; }
     }
@@ -117,13 +119,14 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
     }
     
-    public override void WriteTo(pb::CodedOutputStream output) {
+    public override void WriteTo(pb::ICodedOutputStream output) {
       int size = SerializedSize;
-      if (HasOptionalMessage) {
-        output.WriteMessage(1, OptionalMessage);
+      string[] field_names = _testEmbedOptimizedForSizeFieldNames;
+      if (hasOptionalMessage) {
+        output.WriteMessage(1, field_names[0], OptionalMessage);
       }
-      foreach (global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize element in RepeatedMessageList) {
-        output.WriteMessage(2, element);
+      if (repeatedMessage_.Count > 0) {
+        output.WriteMessageArray(2, field_names[1], repeatedMessage_);
       }
       UnknownFields.WriteTo(output);
     }
@@ -135,7 +138,7 @@ namespace Google.ProtocolBuffers.TestProtos {
         if (size != -1) return size;
         
         size = 0;
-        if (HasOptionalMessage) {
+        if (hasOptionalMessage) {
           size += pb::CodedOutputStream.ComputeMessageSize(1, OptionalMessage);
         }
         foreach (global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize element in RepeatedMessageList) {
@@ -171,10 +174,10 @@ namespace Google.ProtocolBuffers.TestProtos {
     public static TestEmbedOptimizedForSize ParseDelimitedFrom(global::System.IO.Stream input, pb::ExtensionRegistry extensionRegistry) {
       return CreateBuilder().MergeDelimitedFrom(input, extensionRegistry).BuildParsed();
     }
-    public static TestEmbedOptimizedForSize ParseFrom(pb::CodedInputStream input) {
+    public static TestEmbedOptimizedForSize ParseFrom(pb::ICodedInputStream input) {
       return ((Builder) CreateBuilder().MergeFrom(input)).BuildParsed();
     }
-    public static TestEmbedOptimizedForSize ParseFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+    public static TestEmbedOptimizedForSize ParseFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
       return ((Builder) CreateBuilder().MergeFrom(input, extensionRegistry)).BuildParsed();
     }
     public static Builder CreateBuilder() { return new Builder(); }
@@ -247,20 +250,30 @@ namespace Google.ProtocolBuffers.TestProtos {
         return this;
       }
       
-      public override Builder MergeFrom(pb::CodedInputStream input) {
+      public override Builder MergeFrom(pb::ICodedInputStream input) {
         return MergeFrom(input, pb::ExtensionRegistry.Empty);
       }
       
-      public override Builder MergeFrom(pb::CodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
+      public override Builder MergeFrom(pb::ICodedInputStream input, pb::ExtensionRegistry extensionRegistry) {
         pb::UnknownFieldSet.Builder unknownFields = null;
-        while (true) {
-          uint tag = input.ReadTag();
+        uint tag;
+        string field_name;
+        while (input.ReadTag(out tag, out field_name)) {
+          if(tag == 0 && field_name != null) {
+            int field_ordinal = global::System.Array.BinarySearch(_testEmbedOptimizedForSizeFieldNames, field_name, global::System.StringComparer.Ordinal);
+            if(field_ordinal >= 0)
+              tag = _testEmbedOptimizedForSizeFieldTags[field_ordinal];
+            else {
+              if (unknownFields == null) {
+                unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
+              }
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
+              continue;
+            }
+          }
           switch (tag) {
             case 0: {
-              if (unknownFields != null) {
-                this.UnknownFields = unknownFields.Build();
-              }
-              return this;
+              throw pb::InvalidProtocolBufferException.InvalidTag();
             }
             default: {
               if (pb::WireFormat.IsEndGroupTag(tag)) {
@@ -272,12 +285,12 @@ namespace Google.ProtocolBuffers.TestProtos {
               if (unknownFields == null) {
                 unknownFields = pb::UnknownFieldSet.CreateBuilder(this.UnknownFields);
               }
-              ParseUnknownField(input, unknownFields, extensionRegistry, tag);
+              ParseUnknownField(input, unknownFields, extensionRegistry, tag, field_name);
               break;
             }
             case 10: {
               global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize.Builder subBuilder = global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize.CreateBuilder();
-              if (HasOptionalMessage) {
+              if (result.hasOptionalMessage) {
                 subBuilder.MergeFrom(OptionalMessage);
               }
               input.ReadMessage(subBuilder, extensionRegistry);
@@ -285,18 +298,21 @@ namespace Google.ProtocolBuffers.TestProtos {
               break;
             }
             case 18: {
-              global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize.Builder subBuilder = global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize.CreateBuilder();
-              input.ReadMessage(subBuilder, extensionRegistry);
-              AddRepeatedMessage(subBuilder.BuildPartial());
+              input.ReadMessageArray(tag, field_name, result.repeatedMessage_, global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize.DefaultInstance, extensionRegistry);
               break;
             }
           }
         }
+        
+        if (unknownFields != null) {
+          this.UnknownFields = unknownFields.Build();
+        }
+        return this;
       }
       
       
       public bool HasOptionalMessage {
-       get { return result.HasOptionalMessage; }
+       get { return result.hasOptionalMessage; }
       }
       public global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize OptionalMessage {
         get { return result.OptionalMessage; }
@@ -316,7 +332,7 @@ namespace Google.ProtocolBuffers.TestProtos {
       }
       public Builder MergeOptionalMessage(global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize value) {
         pb::ThrowHelper.ThrowIfNull(value, "value");
-        if (result.HasOptionalMessage &&
+        if (result.hasOptionalMessage &&
             result.optionalMessage_ != global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize.DefaultInstance) {
             result.optionalMessage_ = global::Google.ProtocolBuffers.TestProtos.TestOptimizedForSize.CreateBuilder(result.optionalMessage_).MergeFrom(value).BuildPartial();
         } else {
