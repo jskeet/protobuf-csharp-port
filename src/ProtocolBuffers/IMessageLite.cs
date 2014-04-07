@@ -112,6 +112,11 @@ namespace Google.ProtocolBuffers
         void PrintTo(TextWriter writer);
 
         /// <summary>
+        /// Converts the message to a string.
+        /// </summary>
+        void PrintTo(TextGenerator generator);
+
+        /// <summary>
         /// Serializes the message to a ByteString. This is a trivial wrapper
         /// around WriteTo(ICodedOutputStream).
         /// </summary>

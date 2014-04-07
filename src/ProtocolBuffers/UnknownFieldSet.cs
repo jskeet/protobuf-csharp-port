@@ -166,6 +166,15 @@ namespace Google.ProtocolBuffers
         }
 
         /// <summary>
+        /// Converts the set to a string in protocol buffer text format. This
+        /// is just a trivial wrapper around TextFormat.PrintToString.
+        /// </summary>
+        public void PrintTo(TextGenerator generator)
+        {
+            TextFormat.Print(this, generator.Writer);
+        }
+
+        /// <summary>
         /// Serializes the message to a ByteString and returns it. This is
         /// just a trivial wrapper around WriteTo(ICodedOutputStream).
         /// </summary>

@@ -88,6 +88,7 @@
     <Compile Include="IMessageLite.cs" />
     <Compile Include="InvalidProtocolBufferException.cs" />
     <Compile Include="SortedList.cs" />
+    <Compile Include="TextGenerator.cs" />
     <Compile Include="ThrowHelper.cs" />
     <Compile Include="UninitializedMessageException.cs" />
     <Compile Include="WireFormat.cs" />

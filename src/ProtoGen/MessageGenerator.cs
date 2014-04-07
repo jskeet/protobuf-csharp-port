@@ -344,6 +344,21 @@ namespace Google.ProtocolBuffers.ProtoGen
             }
             writer.Outdent();
             writer.WriteLine("}");
+            writer.WriteLine();
+            // By using "writer" instead of "generator", we get to stick to one implementation of WriteToString...
+            writer.WriteLine("public override void PrintTo(pb::TextGenerator writer) {");
+            writer.Indent();
+            // We've already got the sorted fields...
+            foreach (FieldDescriptor fieldDescriptor in sorted)
+            {
+                CreateFieldGenerator(fieldDescriptor).WriteToString(writer);
+            }
+            if (callbase)
+            {
+                writer.WriteLine("base.PrintTo(writer);");
+            }
+            writer.Outdent();
+            writer.WriteLine("}");
             writer.WriteLine("#endregion");
             writer.WriteLine();
         }

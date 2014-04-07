@@ -58,6 +58,11 @@ namespace Google.ProtocolBuffers
         private readonly TextWriter writer;
 
         /// <summary>
+        /// Returns the writer for this generator. Only used for backward compatibility.
+        /// </summary>
+        internal TextWriter Writer { get { return writer; } }
+
+        /// <summary>
         /// Keeps track of whether the next piece of text should be indented
         /// </summary>
         private bool atStartOfLine = true;

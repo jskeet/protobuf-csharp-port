@@ -57,7 +57,8 @@ namespace Google.ProtocolBuffers
         {
             using (StringWriter wtr = new StringWriter())
             {
-                PrintTo(wtr);
+                TextGenerator generator = new TextGenerator(wtr, wtr.NewLine);
+                PrintTo(generator);
                 return wtr.ToString();
             }
         }
@@ -70,6 +71,17 @@ namespace Google.ProtocolBuffers
             foreach (T item in value)
             {
                 PrintField(name, true, (object) item, writer);
+            }
+        }
+
+        /// <summary>
+        /// PrintTo() helper methods for Lite Runtime
+        /// </summary>
+        protected static void PrintField<T>(string name, IList<T> value, TextGenerator generator)
+        {
+            foreach (T item in value)
+            {
+                PrintField(name, true, (object) item, generator);
             }
         }
 
@@ -112,6 +124,50 @@ namespace Google.ProtocolBuffers
             else
             {
                 writer.WriteLine("{0}: {1}", name, ((IConvertible)value).ToString(FrameworkPortability.InvariantCulture));
+            }
+        }
+
+        /// <summary>
+        /// PrintTo() helper methods for Lite Runtime
+        /// </summary>
+        protected static void PrintField(string name, bool hasValue, object value, TextGenerator generator)
+        {
+            if (!hasValue)
+            {
+                return;
+            }
+            if (value is IMessageLite)
+            {
+                generator.WriteLine("{0} {{", name);
+                generator.Indent();
+                ((IMessageLite) value).PrintTo(generator);
+                generator.Outdent();
+                generator.WriteLine("}");
+            }
+            else if (value is ByteString || value is String)
+            {
+                generator.Write("{0}: \"", name);
+                if (value is String)
+                {
+                    EscapeBytes(Encoding.UTF8.GetBytes((string) value), generator.Writer);
+                }
+                else
+                {
+                    EscapeBytes(((ByteString) value), generator.Writer);
+                }
+                generator.WriteLine("\"");
+            }
+            else if (value is bool)
+            {
+                generator.WriteLine("{0}: {1}", name, (bool) value ? "true" : "false");
+            }
+            else if (value is IEnumLite)
+            {
+                generator.WriteLine("{0}: {1}", name, ((IEnumLite) value).Name);
+            }
+            else
+            {
+                generator.WriteLine("{0}: {1}", name, ((IConvertible) value).ToString(FrameworkPortability.InvariantCulture));
             }
         }
 

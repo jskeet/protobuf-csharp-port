@@ -63,6 +63,13 @@ namespace Google.ProtocolBuffers
         //public override int GetHashCode() {
         //}
 
+        // This is overridden in newly-generated classes, but just in case we're using
+        // old generated classes against a new runtime, we fall back to the previous behaviour.
+        public virtual void PrintTo(TextGenerator generator)
+        {
+            PrintTo(generator.Writer);
+        }
+
         public abstract void PrintTo(TextWriter writer);
 
         #region IMessageLite<TMessage,TBuilder> Members
