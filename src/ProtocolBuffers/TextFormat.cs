@@ -214,7 +214,7 @@ namespace Google.ProtocolBuffers
                 case FieldType.Fixed64:
                     // The simple Object.ToString converts using the current culture.
                     // We want to always use the invariant culture so it's predictable.
-                    generator.Print(((IConvertible)value).ToString(FrameworkPortability.InvariantCulture));
+                    generator.Print(((IFormattable)value).ToString(null, FrameworkPortability.InvariantCulture));
                     break;
                 case FieldType.Bool:
                     // Explicitly use the Java true/false

@@ -56,7 +56,11 @@ namespace Google.ProtocolBuffers.FieldAccess
         public static Func<T, object> CreateUpcastDelegate<T>(MethodInfo method)
         {
             // The tricky bit is invoking CreateCreateUpcastDelegateImpl with the right type parameters
+#if WINDOWS_RUNTIME
+            MethodInfo openImpl = typeof(ReflectionUtil).GetRuntimeMethod("CreateUpcastDelegateImpl", new[] { typeof(MethodInfo) });
+#else
             MethodInfo openImpl = typeof(ReflectionUtil).GetMethod("CreateUpcastDelegateImpl");
+#endif
             MethodInfo closedImpl = openImpl.MakeGenericMethod(typeof(T), method.ReturnType);
             return (Func<T, object>) closedImpl.Invoke(null, new object[] {method});
         }
@@ -81,7 +85,11 @@ namespace Google.ProtocolBuffers.FieldAccess
         /// </summary>
         public static Action<T, object> CreateDowncastDelegate<T>(MethodInfo method)
         {
+#if WINDOWS_RUNTIME
+            MethodInfo openImpl = typeof(ReflectionUtil).GetRuntimeMethod("CreateDowncastDelegateImpl", new[] { typeof(MethodInfo) });
+#else
             MethodInfo openImpl = typeof(ReflectionUtil).GetMethod("CreateDowncastDelegateImpl");
+#endif
             MethodInfo closedImpl = openImpl.MakeGenericMethod(typeof(T), method.GetParameters()[0].ParameterType);
             return (Action<T, object>) closedImpl.Invoke(null, new object[] {method});
         }
@@ -101,7 +109,11 @@ namespace Google.ProtocolBuffers.FieldAccess
         /// </summary>
         public static Action<T, object> CreateDowncastDelegateIgnoringReturn<T>(MethodInfo method)
         {
+#if WINDOWS_RUNTIME
+            MethodInfo openImpl = typeof(ReflectionUtil).GetRuntimeMethod("CreateDowncastDelegateIgnoringReturnImpl", new[] { typeof(MethodInfo) });
+#else
             MethodInfo openImpl = typeof(ReflectionUtil).GetMethod("CreateDowncastDelegateIgnoringReturnImpl");
+#endif
             MethodInfo closedImpl = openImpl.MakeGenericMethod(typeof(T), method.GetParameters()[0].ParameterType,
                                                                method.ReturnType);
             return (Action<T, object>) closedImpl.Invoke(null, new object[] {method});
@@ -122,7 +134,11 @@ namespace Google.ProtocolBuffers.FieldAccess
         /// </summary>
         public static Func<IBuilder> CreateStaticUpcastDelegate(MethodInfo method)
         {
+#if WINDOWS_RUNTIME
+            MethodInfo openImpl = typeof(ReflectionUtil).GetRuntimeMethod("CreateStaticUpcastDelegateImpl", new[] { typeof(MethodInfo) });
+#else
             MethodInfo openImpl = typeof(ReflectionUtil).GetMethod("CreateStaticUpcastDelegateImpl");
+#endif
             MethodInfo closedImpl = openImpl.MakeGenericMethod(method.ReturnType);
             return (Func<IBuilder>) closedImpl.Invoke(null, new object[] {method});
         }
@@ -136,7 +152,9 @@ namespace Google.ProtocolBuffers.FieldAccess
 
         internal static Func<TResult> CreateDelegateFunc<TResult>(MethodInfo method)
         {
-#if !CF20
+#if WINDOWS_RUNTIME
+            return (Func<TResult>) method.CreateDelegate(typeof(Func<TResult>), null);
+#elif !CF20
             object tdelegate = Delegate.CreateDelegate(typeof(Func<TResult>), null, method);
             return (Func<TResult>)tdelegate;
 #else
@@ -146,7 +164,9 @@ namespace Google.ProtocolBuffers.FieldAccess
 
         internal static Func<T, TResult> CreateDelegateFunc<T, TResult>(MethodInfo method)
         {
-#if !CF20
+#if WINDOWS_RUNTIME
+            return (Func<T, TResult>) method.CreateDelegate(typeof(Func<T, TResult>), null);
+#elif !CF20
             object tdelegate = Delegate.CreateDelegate(typeof(Func<T, TResult>), null, method);
             return (Func<T, TResult>)tdelegate;
 #else
@@ -160,7 +180,9 @@ namespace Google.ProtocolBuffers.FieldAccess
 
         internal static Func<T1, T2, TResult> CreateDelegateFunc<T1, T2, TResult>(MethodInfo method)
         {
-#if !CF20
+#if WINDOWS_RUNTIME
+            return (Func<T1, T2, TResult>) method.CreateDelegate(typeof(Func<T1, T2, TResult>), null);
+#elif !CF20
             object tdelegate = Delegate.CreateDelegate(typeof(Func<T1, T2, TResult>), null, method);
             return (Func<T1, T2, TResult>)tdelegate;
 #else
@@ -174,7 +196,9 @@ namespace Google.ProtocolBuffers.FieldAccess
 
         internal static Action<T1, T2> CreateDelegateAction<T1, T2>(MethodInfo method)
         {
-#if !CF20
+#if WINDOWS_RUNTIME
+            return (Action<T1, T2>) method.CreateDelegate(typeof(Action<T1, T2>), null);
+#elif !CF20
             object tdelegate = Delegate.CreateDelegate(typeof(Action<T1, T2>), null, method);
             return (Action<T1, T2>)tdelegate;
 #else
@@ -185,5 +209,33 @@ namespace Google.ProtocolBuffers.FieldAccess
             return delegate(T1 arg1, T2 arg2) { method.Invoke(arg1, new object[] { arg2 }); };
 #endif
         }
+
+        internal static PropertyInfo GetProperty<T>(string name)
+        {
+#if WINDOWS_RUNTIME
+            return typeof(T).GetRuntimeProperty(name);
+#else
+            return typeof(T).GetProperty(name);
+#endif
+        }
+
+        internal static MethodInfo GetMethod<T>(string name, Type[] types)
+        {
+#if WINDOWS_RUNTIME
+            return typeof(T).GetRuntimeMethod(name, types);
+#else
+            return typeof(T).GetMethod(name, types);
+#endif
+        }
+
+        internal static MethodInfo GetMethod<T>(string name)
+        {
+#if WINDOWS_RUNTIME
+            return typeof(T).GetRuntimeMethod(name, EmptyTypes);
+#else
+            return typeof(T).GetMethod(name, EmptyTypes);
+#endif
+        }
+
     }
 }

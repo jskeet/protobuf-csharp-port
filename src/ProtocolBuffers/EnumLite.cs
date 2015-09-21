@@ -36,6 +36,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace Google.ProtocolBuffers
 {
@@ -134,8 +136,14 @@ namespace Google.ProtocolBuffers
                 // It will actually be a T[], but the CLR will let us convert.
                 array = (int[])Enum.GetValues(typeof(T));
 #else
+
+#   if WINDOWS_RUNTIME
+                var publicFields = typeof(T).GetRuntimeFields().Where(x => x.IsStatic && x.IsPublic);
+#   else
+                var publicFields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static)
+#   endif
                 var temp = new List<T>();
-                foreach (var fld in typeof (T).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+                foreach (var fld in publicFields)
                 {
                     if (fld.IsLiteral && fld.FieldType == typeof(T))
                     {

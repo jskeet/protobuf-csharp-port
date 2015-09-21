@@ -38,6 +38,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using Google.ProtocolBuffers.FieldAccess;
 
 namespace Google.ProtocolBuffers
 {
@@ -76,9 +78,7 @@ namespace Google.ProtocolBuffers
         {
             try
             {
-                return (TMessage)typeof(TMessage)
-                                      .GetProperty("DefaultInstance", typeof(TMessage), new Type[0])
-                                      .GetValue(null, null);
+                return (TMessage) ReflectionUtil.GetProperty<TMessage>("DefaultInstance").GetValue(null, null);
             }
             catch (Exception e)
             {
