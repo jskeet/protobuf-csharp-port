@@ -10,6 +10,8 @@ src/ProtocolBuffers.Test/bin/
 src/ProtocolBuffers.Test/obj/
 src/ProtocolBuffersLite.Test/bin/
 src/ProtocolBuffersLite.Test/obj/
+src/ProtocolBuffers.Serialization/bin/
+src/ProtocolBuffers.Serialization/obj/
 src/ProtoBench/bin/
 src/ProtoBench/obj/
 src/ProtoDump/bin/
