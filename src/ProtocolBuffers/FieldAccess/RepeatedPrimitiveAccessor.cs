@@ -66,14 +66,14 @@ namespace Google.ProtocolBuffers.FieldAccess
 
         internal RepeatedPrimitiveAccessor(string name)
         {
-            PropertyInfo messageProperty = typeof(TMessage).GetProperty(name + "List");
-            PropertyInfo builderProperty = typeof(TBuilder).GetProperty(name + "List");
-            PropertyInfo countProperty = typeof(TMessage).GetProperty(name + "Count");
-            MethodInfo clearMethod = typeof(TBuilder).GetMethod("Clear" + name, EmptyTypes);
-            getElementMethod = typeof(TMessage).GetMethod("Get" + name, new Type[] {typeof(int)});
+            PropertyInfo messageProperty = ReflectionUtil.GetProperty<TMessage>(name + "List");
+            PropertyInfo builderProperty = ReflectionUtil.GetProperty<TBuilder>(name + "List");
+            PropertyInfo countProperty = ReflectionUtil.GetProperty<TMessage>(name + "Count");
+            MethodInfo clearMethod = ReflectionUtil.GetMethod<TBuilder>("Clear" + name);
+            getElementMethod = ReflectionUtil.GetMethod<TMessage>("Get" + name, new Type[] {typeof(int)});
             clrType = getElementMethod.ReturnType;
-            MethodInfo addMethod = typeof(TBuilder).GetMethod("Add" + name, new Type[] {ClrType});
-            setElementMethod = typeof(TBuilder).GetMethod("Set" + name, new Type[] {typeof(int), ClrType});
+            MethodInfo addMethod = ReflectionUtil.GetMethod<TBuilder>("Add" + name, new Type[] {ClrType});
+            setElementMethod = ReflectionUtil.GetMethod<TBuilder>("Set" + name, new Type[] {typeof(int), ClrType});
             if (messageProperty == null
                 || builderProperty == null
                 || countProperty == null
@@ -85,10 +85,16 @@ namespace Google.ProtocolBuffers.FieldAccess
                 throw new ArgumentException("Not all required properties/methods available");
             }
             clearDelegate = ReflectionUtil.CreateDelegateFunc<TBuilder, IBuilder>(clearMethod);
+            addValueDelegate = ReflectionUtil.CreateDowncastDelegateIgnoringReturn<TBuilder>(addMethod);
+#if WINDOWS_RUNTIME
+            countDelegate = ReflectionUtil.CreateDelegateFunc<TMessage, int>(countProperty.GetMethod);
+            getValueDelegate = ReflectionUtil.CreateUpcastDelegate<TMessage>(messageProperty.GetMethod);
+            getRepeatedWrapperDelegate = ReflectionUtil.CreateUpcastDelegate<TBuilder>(builderProperty.GetMethod);
+#else
             countDelegate = ReflectionUtil.CreateDelegateFunc<TMessage, int>(countProperty.GetGetMethod());
             getValueDelegate = ReflectionUtil.CreateUpcastDelegate<TMessage>(messageProperty.GetGetMethod());
-            addValueDelegate = ReflectionUtil.CreateDowncastDelegateIgnoringReturn<TBuilder>(addMethod);
             getRepeatedWrapperDelegate = ReflectionUtil.CreateUpcastDelegate<TBuilder>(builderProperty.GetGetMethod());
+#endif
         }
 
         public bool Has(TMessage message)

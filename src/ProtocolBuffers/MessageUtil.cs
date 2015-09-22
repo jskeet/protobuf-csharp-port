@@ -53,25 +53,41 @@ namespace Google.ProtocolBuffers
         /// <exception cref="ArgumentNullException">The type parameter is null.</exception>
         /// <exception cref="ArgumentException">The type doesn't implement IMessage, or doesn't
         /// have a static DefaultMessage property of the same type, or is generic or abstract.</exception>
-        /// <returns></returns>
         public static IMessage GetDefaultMessage(Type type)
         {
             if (type == null)
             {
                 throw new ArgumentNullException("type", "No type specified.");
             }
+
+#if WINDOWS_RUNTIME
+            var typeInfo = type.GetTypeInfo();
+
+            if (typeInfo.IsAbstract || typeInfo.IsGenericTypeDefinition)
+            {
+                throw new ArgumentException("Unable to get a default message for an abstract or generic type (" + type.FullName + ")");
+            }
+            if (!typeof(IMessage).GetTypeInfo().IsAssignableFrom(typeInfo))
+            {
+                throw new ArgumentException("Unable to get a default message for non-message type (" + type.FullName + ")");
+            }
+#else
             if (type.IsAbstract || type.IsGenericTypeDefinition)
             {
-                throw new ArgumentException("Unable to get a default message for an abstract or generic type (" +
-                                            type.FullName + ")");
+                throw new ArgumentException("Unable to get a default message for an abstract or generic type (" + type.FullName + ")");
             }
             if (!typeof(IMessage).IsAssignableFrom(type))
             {
-                throw new ArgumentException("Unable to get a default message for non-message type (" + type.FullName +
-                                            ")");
+                throw new ArgumentException("Unable to get a default message for non-message type (" + type.FullName + ")");
             }
+#endif
+
+#if WINDOWS_RUNTIME
+            PropertyInfo property = type.GetRuntimeProperty("DefaultInstance");
+#else
             PropertyInfo property = type.GetProperty("DefaultInstance",
                                                      BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+#endif
             if (property == null)
             {
                 throw new ArgumentException(type.FullName + " doesn't have a static DefaultInstance property");

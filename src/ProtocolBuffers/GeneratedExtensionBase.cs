@@ -80,8 +80,12 @@ namespace Google.ProtocolBuffers
             this.descriptor = descriptor;
             if (descriptor.MappedType == MappedType.Message)
             {
+#if WINDOWS_RUNTIME
+                PropertyInfo defaultInstanceProperty = singularExtensionType.GetRuntimeProperty("DefaultInstance");
+#else
                 PropertyInfo defaultInstanceProperty = singularExtensionType
                     .GetProperty("DefaultInstance", BindingFlags.Static | BindingFlags.Public);
+#endif
                 if (defaultInstanceProperty == null)
                 {
                     throw new ArgumentException("No public static DefaultInstance property for type " +

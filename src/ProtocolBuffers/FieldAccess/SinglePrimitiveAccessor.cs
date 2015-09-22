@@ -58,19 +58,25 @@ namespace Google.ProtocolBuffers.FieldAccess
 
         internal SinglePrimitiveAccessor(string name)
         {
-            PropertyInfo messageProperty = typeof(TMessage).GetProperty(name, null, ReflectionUtil.EmptyTypes);
-            PropertyInfo builderProperty = typeof(TBuilder).GetProperty(name, null, ReflectionUtil.EmptyTypes);
-            PropertyInfo hasProperty = typeof(TMessage).GetProperty("Has" + name);
-            MethodInfo clearMethod = typeof(TBuilder).GetMethod("Clear" + name);
+            PropertyInfo messageProperty = ReflectionUtil.GetProperty<TMessage>(name);
+            PropertyInfo builderProperty = ReflectionUtil.GetProperty<TBuilder>(name);
+            PropertyInfo hasProperty = ReflectionUtil.GetProperty<TMessage>("Has" + name);
+            MethodInfo clearMethod = ReflectionUtil.GetMethod<TBuilder>("Clear" + name, ReflectionUtil.EmptyTypes);
             if (messageProperty == null || builderProperty == null || hasProperty == null || clearMethod == null)
             {
                 throw new ArgumentException("Not all required properties/methods available");
             }
             clrType = messageProperty.PropertyType;
-            hasDelegate = ReflectionUtil.CreateDelegateFunc<TMessage, bool>(hasProperty.GetGetMethod());
             clearDelegate = ReflectionUtil.CreateDelegateFunc<TBuilder, IBuilder>(clearMethod);
+#if WINDOWS_RUNTIME
+            hasDelegate = ReflectionUtil.CreateDelegateFunc<TMessage, bool>(hasProperty.GetMethod);
+            getValueDelegate = ReflectionUtil.CreateUpcastDelegate<TMessage>(messageProperty.GetMethod);
+            setValueDelegate = ReflectionUtil.CreateDowncastDelegate<TBuilder>(builderProperty.SetMethod);
+#else
+            hasDelegate = ReflectionUtil.CreateDelegateFunc<TMessage, bool>(hasProperty.GetGetMethod());
             getValueDelegate = ReflectionUtil.CreateUpcastDelegate<TMessage>(messageProperty.GetGetMethod());
             setValueDelegate = ReflectionUtil.CreateDowncastDelegate<TBuilder>(builderProperty.GetSetMethod());
+#endif
         }
 
         public bool Has(TMessage message)
@@ -101,7 +107,7 @@ namespace Google.ProtocolBuffers.FieldAccess
             setValueDelegate(builder, value);
         }
 
-        #region Methods only related to repeated values
+#region Methods only related to repeated values
 
         public int GetRepeatedCount(TMessage message)
         {
@@ -128,6 +134,6 @@ namespace Google.ProtocolBuffers.FieldAccess
             throw new InvalidOperationException();
         }
 
-        #endregion
+#endregion
     }
 }

@@ -155,10 +155,10 @@ namespace Google.ProtocolBuffers.Serialization
                         {
                             WriteEnum(field, ((IEnumLite) value).Number, ((IEnumLite) value).Name);
                         }
-                        else if (value is IConvertible)
+                        else if (value is ValueType)
                         {
-                            WriteEnum(field, ((IConvertible)value).ToInt32(FrameworkPortability.InvariantCulture),
-                                      ((IConvertible)value).ToString(FrameworkPortability.InvariantCulture));
+                            int intValue = Convert.ToInt32(value);
+                            WriteEnum(field, Convert.ToInt32(value), intValue.ToString(FrameworkPortability.InvariantCulture));
                         }
                         else
                         {

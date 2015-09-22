@@ -50,7 +50,11 @@ namespace Google.ProtocolBuffers.FieldAccess
 
         internal SingleMessageAccessor(string name) : base(name)
         {
+#if WINDOWS_RUNTIME
+            MethodInfo createBuilderMethod = ClrType.GetRuntimeMethod("CreateBuilder", ReflectionUtil.EmptyTypes);
+#else
             MethodInfo createBuilderMethod = ClrType.GetMethod("CreateBuilder", ReflectionUtil.EmptyTypes);
+#endif
             if (createBuilderMethod == null)
             {
                 throw new ArgumentException("No public static CreateBuilder method declared in " + ClrType.Name);
@@ -66,7 +70,11 @@ namespace Google.ProtocolBuffers.FieldAccess
         {
             ThrowHelper.ThrowIfNull(value, "value");
             // If it's already of the right type, we're done
+#if WINDOWS_RUNTIME
+            if (ClrType.GetTypeInfo().IsSubclassOf(value.GetType()))
+#else
             if (ClrType.IsInstanceOfType(value))
+#endif
             {
                 return value;
             }

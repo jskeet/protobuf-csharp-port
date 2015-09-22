@@ -31,6 +31,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Google.ProtocolBuffers.Collections;
 using Google.ProtocolBuffers.DescriptorProtos;
@@ -441,11 +442,17 @@ namespace Google.ProtocolBuffers.Descriptors
         private static IDictionary<FieldType, MappedType> MapFieldTypes()
         {
             var map = new Dictionary<FieldType, MappedType>();
-            foreach (FieldInfo field in typeof(FieldType).GetFields(BindingFlags.Static | BindingFlags.Public))
+#if WINDOWS_RUNTIME
+            var publicFields = typeof(FieldType).GetRuntimeFields().Where(x => x.IsStatic && x.IsPublic);
+#else
+            var publicFields = typeof(FieldType).GetFields(BindingFlags.Static | BindingFlags.Public);
+#endif
+
+            foreach (FieldInfo field in publicFields)
             {
                 FieldType fieldType = (FieldType) field.GetValue(null);
                 FieldMappingAttribute mapping =
-                    (FieldMappingAttribute) field.GetCustomAttributes(typeof(FieldMappingAttribute), false)[0];
+                    (FieldMappingAttribute) field.GetCustomAttributes(typeof(FieldMappingAttribute), false).First();
                 map[fieldType] = mapping.MappedType;
             }
             return Dictionaries.AsReadOnly(map);
